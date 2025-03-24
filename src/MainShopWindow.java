@@ -19,7 +19,7 @@ public class MainShopWindow extends JFrame {
         panel.setLayout(new BorderLayout());
 
 
-        JLabel welcomeLabel = new JLabel("Bienvenue, " + currentUser.getNom() + "!", SwingConstants.CENTER);
+        JLabel welcomeLabel = new JLabel("Bienvenue, " + currentUser.getPrenom() + "!", SwingConstants.CENTER);
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
         panel.add(welcomeLabel, BorderLayout.CENTER);
 
