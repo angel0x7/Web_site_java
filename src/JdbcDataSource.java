@@ -26,12 +26,17 @@ public class JdbcDataSource {
         }
     }
 
-    public static synchronized Connection getConnection() {
-        if (connection == null) {
-            new JdbcDataSource();
+    public static Connection getConnection() {
+        try {
+            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("✅ Connexion réussie à la base de données.");
+            return conn;
+        } catch (SQLException e) {
+            System.err.println("❌ Erreur de connexion à la base de données : " + e.getMessage());
+            return null;
         }
-        return connection;
     }
+
 
 
     public static void closeConnection() {
@@ -169,30 +174,57 @@ public class JdbcDataSource {
         String queryClient = "SELECT id, nom, prenom, email FROM tab_client WHERE email = ? AND MotDePasse = ?";
         String queryAdmin = "SELECT id, nom, prenom, email FROM tab_admin WHERE email = ? AND MotDePasse = ?";
 
-        try (Connection conn = JdbcDataSource.getConnection();
-             PreparedStatement pstmtClient = conn.prepareStatement(queryClient);
-             PreparedStatement pstmtAdmin = conn.prepareStatement(queryAdmin)) {
+        Connection conn = null;
+        PreparedStatement pstmtClient = null;
+        PreparedStatement pstmtAdmin = null;
+        ResultSet rsClient = null;
+        ResultSet rsAdmin = null;
 
-            pstmtClient.setString(1, email);
-            pstmtClient.setString(2, password);
-            ResultSet rsClient = pstmtClient.executeQuery();
+        try {
+            conn = JdbcDataSource.getConnection();
 
-            if (rsClient.next()) {
-                return new User(rsClient.getInt("id"), rsClient.getString("nom"), rsClient.getString("prenom"), rsClient.getString("email"), "CLIENT");
+            if (conn == null || conn.isClosed()) {  // ✅ Vérification de la connexion
+                System.err.println("❌ Connexion à la base de données indisponible !");
+                return null;
             }
 
+            // Vérification dans la table "tab_client"
+            pstmtClient = conn.prepareStatement(queryClient);
+            pstmtClient.setString(1, email);
+            pstmtClient.setString(2, password);
+            rsClient = pstmtClient.executeQuery();
+
+            if (rsClient.next()) {
+                return new User(rsClient.getInt("id"), rsClient.getString("nom"), rsClient.getString("prenom"),
+                        rsClient.getString("email"), "CLIENT");
+            }
+
+            // Vérification dans la table "tab_admin"
+            pstmtAdmin = conn.prepareStatement(queryAdmin);
             pstmtAdmin.setString(1, email);
             pstmtAdmin.setString(2, password);
-            ResultSet rsAdmin = pstmtAdmin.executeQuery();
+            rsAdmin = pstmtAdmin.executeQuery();
 
             if (rsAdmin.next()) {
-                return new User(rsAdmin.getInt("id"), rsAdmin.getString("nom"), rsAdmin.getString("prenom"), rsAdmin.getString("email"), "ADMIN");
+                return new User(rsAdmin.getInt("id"), rsAdmin.getString("nom"), rsAdmin.getString("prenom"),
+                        rsAdmin.getString("email"), "ADMIN");
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (rsClient != null) rsClient.close();
+                if (rsAdmin != null) rsAdmin.close();
+                if (pstmtClient != null) pstmtClient.close();
+                if (pstmtAdmin != null) pstmtAdmin.close();
+                if (conn != null) conn.close();  // ✅ Fermeture de la connexion après utilisation
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+
+        return null;  // Aucun utilisateur trouvé
     }
 
 
