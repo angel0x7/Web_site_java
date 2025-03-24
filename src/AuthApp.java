@@ -85,8 +85,9 @@ public class AuthApp extends JFrame {
 
 
 
+    // Écran Sign Up (Amélioré)
     private JPanel createSignUpScreen() {
-        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
 
         JLabel nomLabel = new JLabel("Nom:");
         JTextField nomField = new JTextField();
@@ -99,26 +100,45 @@ public class AuthApp extends JFrame {
         JButton signUpButton = new JButton("Créer un compte");
 
         signUpButton.addActionListener(e -> {
-            String nom = nomField.getText();
-            String prenom = prenomField.getText();
-            String email = emailField.getText();
-            String password = new String(passwordField.getPassword());
+            String nom = nomField.getText().trim();
+            String prenom = prenomField.getText().trim();
+            String email = emailField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
 
+            // Vérification des champs
+            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "❌ Tous les champs doivent être remplis !");
+                return;
+            }
+
+            /*if (password.length() < 6) {
+                JOptionPane.showMessageDialog(this, "❌ Le mot de passe doit contenir au moins 6 caractères !");
+                return;
+            }*/
+
+            // Vérifier si l'email est déjà utilisé
+            if (emailExiste(email)) {
+                JOptionPane.showMessageDialog(this, "❌ Cet email est déjà utilisé !");
+                return;
+            }
+
+            // Enregistrement en base
             if (registerUser(nom, prenom, email, password)) {
                 JOptionPane.showMessageDialog(this, "✅ Inscription réussie !");
 
-                // 🔥 On récupère l'utilisateur pour l'afficher dans MainShopWindow
+                // Récupérer l'utilisateur depuis la base pour l'ouvrir dans MainShopWindow
                 currentUser = JdbcDataSource.authenticateUser(email, password);
 
                 if (currentUser != null) {
                     new MainShopWindow(currentUser).setVisible(true);
-                    dispose();
+                    dispose(); // Fermer la fenêtre d'inscription
+                } else {
+                    JOptionPane.showMessageDialog(this, "❌ Erreur lors de la récupération de l'utilisateur !");
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "❌ Email déjà utilisé !");
+                JOptionPane.showMessageDialog(this, "❌ Une erreur est survenue lors de l'inscription !");
             }
         });
-
 
         panel.add(nomLabel);
         panel.add(nomField);
@@ -128,11 +148,12 @@ public class AuthApp extends JFrame {
         panel.add(emailField);
         panel.add(passwordLabel);
         panel.add(passwordField);
-        panel.add(new JLabel()); // Espace
+        panel.add(new JLabel()); // Espace vide
         panel.add(signUpButton);
 
         return panel;
     }
+
 
 
     private void showLogoutScreen() {
@@ -168,28 +189,44 @@ public class AuthApp extends JFrame {
     }
 
 
-    private boolean registerUser(String nom, String prenom, String email, String password) {
 
+        private boolean registerUser(String nom, String prenom, String email, String password) {
+            String query = "INSERT INTO tab_client (nom, prenom, email, MotDePasse, date_inscription) VALUES (?, ?, ?, ?, ?)";
 
-        String query = "INSERT INTO tab_client (nom, prenom, email, MotDePasse, date_inscription) VALUES (?, ?, ?, ?, ?)";
+            Connection conn = null;
+            PreparedStatement pstmt = null;
 
-        try (Connection conn = JdbcDataSource.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            try {
+                conn = JdbcDataSource.getConnection();
 
-            pstmt.setString(1, nom);
-            pstmt.setString(2, prenom);
-            pstmt.setString(3, email);
-            pstmt.setString(4, password);
-            pstmt.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+                if (conn == null || conn.isClosed()) {  // ✅ Vérification de la connexion
+                    System.err.println("❌ Connexion à la base de données fermée ou indisponible !");
+                    return false;
+                }
 
-            return pstmt.executeUpdate() > 0; // Retourne vrai si l'insertion a réussi
+                pstmt = conn.prepareStatement(query);
+                pstmt.setString(1, nom);
+                pstmt.setString(2, prenom);
+                pstmt.setString(3, email);
+                pstmt.setString(4, password);
+                pstmt.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+                int rowsInserted = pstmt.executeUpdate();
+                return rowsInserted > 0;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            } finally {
+                try {
+                    if (pstmt != null) pstmt.close();  // ✅ Fermer le PreparedStatement après exécution
+                    if (conn != null) conn.close();   // ✅ Fermer la connexion après usage
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
-    }
 
 
     private boolean emailExiste(String email) {
