@@ -26,8 +26,6 @@ public class AuthApp extends JFrame {
         add(mainPanel);
     }
 
-
-
     private JPanel createHomeScreen() {
 
         JPanel panel = new JPanel();

@@ -13,7 +13,7 @@ public class SampleDB {
             //JdbcDataSource.deleteClient(3); //sup de id 3
            // JdbcDataSource.insertClient(7, "Cristiano", "Ronaldo", "cristiano.ronaldo@gmail.com","the2ndgoat");
             // 2️⃣ Lire les clients
-            JdbcDataSource.insertAdmin("admin_user", "admin_user", "", "12345admin","ADMIN");
+            JdbcDataSource.insertAdmin("admin_user", "admin_user", "");
             JdbcDataSource.getAdmin();  // 🔥 La connexion doit être ouverte ici
 
         } catch (Exception e) {
