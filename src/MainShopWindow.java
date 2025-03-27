@@ -4,34 +4,65 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MainShopWindow extends JFrame {
-    private User currentUser;
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
 
-    public MainShopWindow(User user) {
-        this.currentUser = user;
-
-        setTitle("Accueil - Boutique en ligne");
-        setSize(500, 400);
+    public MainShopWindow(User currentUser) {
+        setTitle("Shopping App");
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+        // Ajouter les pages
+        mainPanel.add(new CategoriesPage(), "Categories");
+        mainPanel.add(new FlashSalesPage(), "Vente Flash");
+        mainPanel.add(new SellPage(), "Vente");
+        mainPanel.add(new AccountPage(currentUser), "account");
+        mainPanel.add(new PanierPage(), "Panier");
+        mainPanel.add(new AdminPage(), "admin");
 
+        // Barre de navigation
+        JPanel navBar = createNavBar();
 
-        JLabel welcomeLabel = new JLabel("Bienvenue, " + currentUser.getPrenom() + "!", SwingConstants.CENTER);
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        panel.add(welcomeLabel, BorderLayout.CENTER);
+        // Layout principal
+        setLayout(new BorderLayout());
+        add(navBar, BorderLayout.NORTH);
+        add(mainPanel, BorderLayout.CENTER);
+    }
 
+    private JPanel createNavBar() {
+        JPanel navBar = new JPanel();
+        navBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        JButton logoutButton = new JButton("Déconnexion");
-        logoutButton.addActionListener(e -> {
-            new AuthApp().setVisible(true);
-            dispose();
-        });
+        JButton btnCategories = new JButton("Catégories");
+        JButton btnFlashSale = new JButton("Vente Flash");
+        JButton btnSell = new JButton("Vendre");
+        JButton btnAccount = new JButton("Mon Compte");
+        JButton btnCart = new JButton("Panier");
+        JButton btnAdmin = new JButton("Admin");
 
-        panel.add(logoutButton, BorderLayout.SOUTH);
+        // Actions des boutons
+        btnCategories.addActionListener(e -> cardLayout.show(mainPanel, "categories"));
+        btnFlashSale.addActionListener(e -> cardLayout.show(mainPanel, "flash_sale"));
+        btnSell.addActionListener(e -> cardLayout.show(mainPanel, "sell"));
+        btnAccount.addActionListener(e -> cardLayout.show(mainPanel, "account"));
+        btnCart.addActionListener(e -> cardLayout.show(mainPanel, "cart"));
+        btnAdmin.addActionListener(e -> cardLayout.show(mainPanel, "admin"));
 
-        add(panel);
+        // Ajouter les boutons à la barre de navigation
+        navBar.add(btnCategories);
+        navBar.add(btnFlashSale);
+        navBar.add(btnSell);
+        navBar.add(btnAccount);
+        navBar.add(btnCart);
+        navBar.add(btnAdmin);
+
+        return navBar;
     }
 }
+
+
+
