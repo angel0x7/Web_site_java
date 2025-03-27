@@ -4,65 +4,83 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MainShopWindow extends JFrame {
+    private User currentUser;
+    private JPanel contentPanel;
     private CardLayout cardLayout;
-    private JPanel mainPanel;
 
-    public MainShopWindow(User currentUser) {
-        setTitle("Shopping App");
+    public MainShopWindow(User user) {
+        this.currentUser = user;
+
+        setTitle("Boutique en ligne");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+        contentPanel = new JPanel(cardLayout);
 
-        // Ajouter les pages
-        mainPanel.add(new CategoriesPage(), "Categories");
-        mainPanel.add(new FlashSalesPage(), "Vente Flash");
-        mainPanel.add(new SellPage(), "Vente");
-        mainPanel.add(new AccountPage(currentUser), "account");
-        mainPanel.add(new PanierPage(), "Panier");
-        mainPanel.add(new AdminPage(), "admin");
 
-        // Barre de navigation
         JPanel navBar = createNavBar();
-
-        // Layout principal
-        setLayout(new BorderLayout());
         add(navBar, BorderLayout.NORTH);
-        add(mainPanel, BorderLayout.CENTER);
+        add(contentPanel, BorderLayout.CENTER);
+
+
+        contentPanel.add(new JLabel("Accueil"), "home");
+        contentPanel.add(new JLabel("Catégories"), "Catégories");
+        contentPanel.add(new JLabel("Vente Flash"), "Vente Flash");
+        contentPanel.add(new JLabel("Vendre"), "Vendre");
+        contentPanel.add(new JLabel("Panier"), "Panier");
+        contentPanel.add(new JLabel("Admin"), "Admin");
+
+        showPage("home");
     }
 
     private JPanel createNavBar() {
         JPanel navBar = new JPanel();
-        navBar.setLayout(new FlowLayout(FlowLayout.LEFT));
+        navBar.setLayout(new GridLayout(1, 6));
 
         JButton btnCategories = new JButton("Catégories");
-        JButton btnFlashSale = new JButton("Vente Flash");
-        JButton btnSell = new JButton("Vendre");
+        JButton btnVentesFlash = new JButton("Vente Flash");
+        JButton btnVentes = new JButton("Vendre");
         JButton btnAccount = new JButton("Mon Compte");
-        JButton btnCart = new JButton("Panier");
+        JButton btnPanier = new JButton("Panier");
         JButton btnAdmin = new JButton("Admin");
 
-        // Actions des boutons
-        btnCategories.addActionListener(e -> cardLayout.show(mainPanel, "categories"));
-        btnFlashSale.addActionListener(e -> cardLayout.show(mainPanel, "flash_sale"));
-        btnSell.addActionListener(e -> cardLayout.show(mainPanel, "sell"));
-        btnAccount.addActionListener(e -> cardLayout.show(mainPanel, "account"));
-        btnCart.addActionListener(e -> cardLayout.show(mainPanel, "cart"));
-        btnAdmin.addActionListener(e -> cardLayout.show(mainPanel, "admin"));
+        btnCategories.addActionListener(e -> showPage("Catégories"));
+        btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
+        btnVentes.addActionListener(e -> showPage("Vendre"));
+        btnPanier.addActionListener(e -> showPage("Panier"));
+        btnAdmin.addActionListener(e -> showPage("Admin"));
 
-        // Ajouter les boutons à la barre de navigation
+        btnAccount.addActionListener(e -> openAuthApp());
+
         navBar.add(btnCategories);
-        navBar.add(btnFlashSale);
-        navBar.add(btnSell);
+        navBar.add(btnVentesFlash);
+        navBar.add(btnVentes);
         navBar.add(btnAccount);
-        navBar.add(btnCart);
+        navBar.add(btnPanier);
         navBar.add(btnAdmin);
 
         return navBar;
     }
+
+    private void showPage(String page) {
+        cardLayout.show(contentPanel, page);
+    }
+
+    private void openAuthApp() {
+        AuthApp authApp = new AuthApp();
+        authApp.setVisible(true);
+    }
+
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        JOptionPane.showMessageDialog(this, "Connecté en tant que: " + user.getNom());
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new MainShopWindow(null).setVisible(true);
+        });
+    }
 }
-
-
-

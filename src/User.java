@@ -3,7 +3,7 @@ public class User {
     private String nom;
     private String prenom;
     private String email;
-    private String role; // "ADMIN" ou "CLIENT"
+    private String role;
 
     public User(int id, String nom, String prenom, String email, String role) {
         this.id = id;
