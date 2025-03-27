@@ -59,14 +59,14 @@ public class AuthApp extends JFrame {
             currentUser = JdbcDataSource.authenticateUser(email, password);
 
             if (currentUser != null) {
-                JOptionPane.showMessageDialog(this, "✅ Connexion réussie ! Bienvenue " + currentUser.getNom());
+                JOptionPane.showMessageDialog(this, " Connexion réussie ! Bienvenue " + currentUser.getNom());
 
                 // 🔥 Ouvrir la nouvelle fenêtre de la boutique
                 new MainShopWindow(currentUser).setVisible(true);
                 dispose(); // Fermer la fenêtre de connexion
 
             } else {
-                JOptionPane.showMessageDialog(this, "❌ Email ou mot de passe incorrect !");
+                JOptionPane.showMessageDialog(this, " Email ou mot de passe incorrect !");
             }
         });
 
@@ -105,24 +105,24 @@ public class AuthApp extends JFrame {
 
             // Vérification des champs
             if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "❌ Tous les champs doivent être remplis !");
+                JOptionPane.showMessageDialog(this, " Tous les champs doivent être remplis !");
                 return;
             }
 
             /*if (password.length() < 6) {
-                JOptionPane.showMessageDialog(this, "❌ Le mot de passe doit contenir au moins 6 caractères !");
+                JOptionPane.showMessageDialog(this, " Le mot de passe doit contenir au moins 6 caractères !");
                 return;
             }*/
 
             // Vérifier si l'email est déjà utilisé
             if (emailExiste(email)) {
-                JOptionPane.showMessageDialog(this, "❌ Cet email est déjà utilisé !");
+                JOptionPane.showMessageDialog(this, " Cet email est déjà utilisé !");
                 return;
             }
 
             // Enregistrement en base
             if (registerUser(nom, prenom, email, password)) {
-                JOptionPane.showMessageDialog(this, "✅ Inscription réussie !");
+                JOptionPane.showMessageDialog(this, " Inscription réussie !");
 
                 // Récupérer l'utilisateur depuis la base pour l'ouvrir dans MainShopWindow
                 currentUser = JdbcDataSource.authenticateUser(email, password);
@@ -131,10 +131,10 @@ public class AuthApp extends JFrame {
                     new MainShopWindow(currentUser).setVisible(true);
                     dispose(); // Fermer la fenêtre d'inscription
                 } else {
-                    JOptionPane.showMessageDialog(this, "❌ Erreur lors de la récupération de l'utilisateur !");
+                    JOptionPane.showMessageDialog(this, " Erreur lors de la récupération de l'utilisateur !");
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "❌ Une erreur est survenue lors de l'inscription !");
+                JOptionPane.showMessageDialog(this, " Une erreur est survenue lors de l'inscription !");
             }
         });
 
@@ -197,8 +197,8 @@ public class AuthApp extends JFrame {
             try {
                 conn = JdbcDataSource.getConnection();
 
-                if (conn == null || conn.isClosed()) {  // ✅ Vérification de la connexion
-                    System.err.println("❌ Connexion à la base de données fermée ou indisponible !");
+                if (conn == null || conn.isClosed()) {  //  Vérification de la connexion
+                    System.err.println(" Connexion à la base de données fermée ou indisponible !");
                     return false;
                 }
 
@@ -217,8 +217,8 @@ public class AuthApp extends JFrame {
                 return false;
             } finally {
                 try {
-                    if (pstmt != null) pstmt.close();  // ✅ Fermer le PreparedStatement après exécution
-                    if (conn != null) conn.close();   // ✅ Fermer la connexion après usage
+                    if (pstmt != null) pstmt.close();  // Fermer le PreparedStatement après exécution
+                    if (conn != null) conn.close();   //  Fermer la connexion après usage
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
