@@ -1,11 +1,7 @@
 import javax.swing.*;
-import java.awt.*;
 
-class VentesPage extends JPanel {
+public class VentesPage extends JPanel {
     public VentesPage() {
-        setLayout(new BorderLayout());
-
-
-        add(new JLabel("🛒 Vendre un produit"), BorderLayout.CENTER);
+        add(new JLabel("💰 Vendez vos produits ici !"));
     }
 }
