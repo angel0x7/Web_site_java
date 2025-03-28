@@ -96,11 +96,11 @@ public class MainShopWindow extends JFrame {
                     options[0]
             );
 
-            if (choice == 0) { // Déconnexion
+            if (choice == 0) {
                 currentUser = null;
                 new AuthApp().setVisible(true);
                 dispose();
-            } else if (choice == 1) { // Voir Profil
+            } else if (choice == 1) {
                 JOptionPane.showMessageDialog(this, "Nom : " + currentUser.getNom() + "\nEmail : " + currentUser.getEmail());
             }
         }
