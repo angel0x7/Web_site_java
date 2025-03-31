@@ -10,9 +10,9 @@ public class MainShopWindow extends JFrame {
 
     public MainShopWindow(User user) {
         this.currentUser = user;
-
         setTitle("Boutique en ligne");
-        setSize(800, 600);
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // Met la fenêtre en plein écran
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -30,7 +30,7 @@ public class MainShopWindow extends JFrame {
         contentPanel.add(new VentesPage(), "Vendre");
         contentPanel.add(new PanierPage(), "Panier");
         contentPanel.add(new AdminPanel(), "Admin");
-        contentPanel.add(new UserPanel(), "User"); // ✅ Ajout du panneau utilisateur
+        contentPanel.add(new UserPanel(), "User"); // Ajout du panneau utilisateur
 
         showPage("home");
     }
@@ -52,11 +52,11 @@ public class MainShopWindow extends JFrame {
         btnVentes.addActionListener(e -> showPage("Vendre"));
         btnPanier.addActionListener(e -> showPage("Panier"));
         btnAdmin.addActionListener(e -> showPage("Admin"));
-        btnUser.addActionListener(e -> showPage("User")); // ✅ Correction du nom
+        btnUser.addActionListener(e -> showPage("User")); // Correction du nom
 
         btnAccount.addActionListener(e -> showAccountOptions());
 
-        // ✅ Cacher les boutons Admin et User selon le rôle de l'utilisateur
+        // Cacher les boutons Admin et User selon le rôle de l'utilisateur
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             btnAdmin.setVisible(false);
         }
