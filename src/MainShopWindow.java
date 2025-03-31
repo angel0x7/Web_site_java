@@ -1,6 +1,8 @@
+import Vue.*;
+
 import javax.swing.*;
 import java.awt.*;
-
+import Modele.User;
 public class MainShopWindow extends JFrame {
     private User currentUser;
     private JPanel contentPanel;

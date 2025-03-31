@@ -1,3 +1,5 @@
+package Vue;
+
 import javax.swing.*;
 
 public class AdminPanel extends JPanel {
