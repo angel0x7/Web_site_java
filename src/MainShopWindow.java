@@ -5,7 +5,7 @@ public class MainShopWindow extends JFrame {
     private User currentUser;
     private JPanel contentPanel;
     private CardLayout cardLayout;
-    private JButton btnAdmin;
+    private JButton btnAdmin;//
     private JButton btnUser;
 
     public MainShopWindow(User user) {
