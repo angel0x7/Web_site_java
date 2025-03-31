@@ -29,16 +29,16 @@ SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `avis`;
 CREATE TABLE IF NOT EXISTS `avis` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `titre` varchar(255) NOT NULL,
-  `note` int NOT NULL,
-  `description` varchar(10000) NOT NULL,
-  `produit_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_avis_produit` (`produit_id`),
-  KEY `fk_avis_user` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                                      `id` int NOT NULL AUTO_INCREMENT,
+                                      `titre` varchar(255) NOT NULL,
+    `note` int NOT NULL,
+    `description` varchar(10000) NOT NULL,
+    `produit_id` int NOT NULL,
+    `user_id` int NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_avis_produit` (`produit_id`),
+    KEY `fk_avis_user` (`user_id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -48,14 +48,14 @@ CREATE TABLE IF NOT EXISTS `avis` (
 
 DROP TABLE IF EXISTS `element_panier`;
 CREATE TABLE IF NOT EXISTS `element_panier` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `quantite` int NOT NULL,
-  `produit_id` int NOT NULL,
-  `panier_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_element_panier` (`panier_id`),
-  KEY `fk_produit_panier` (`produit_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                                                `id` int NOT NULL AUTO_INCREMENT,
+                                                `quantite` int NOT NULL,
+                                                `produit_id` int NOT NULL,
+                                                `panier_id` int NOT NULL,
+                                                PRIMARY KEY (`id`),
+    KEY `fk_element_panier` (`panier_id`),
+    KEY `fk_produit_panier` (`produit_id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -65,12 +65,12 @@ CREATE TABLE IF NOT EXISTS `element_panier` (
 
 DROP TABLE IF EXISTS `marque`;
 CREATE TABLE IF NOT EXISTS `marque` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `nom` varchar(255) NOT NULL,
-  `image` varchar(255) NOT NULL,
-  `description` varchar(10000) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                                        `id` int NOT NULL AUTO_INCREMENT,
+                                        `nom` varchar(255) NOT NULL,
+    `image` varchar(255) NOT NULL,
+    `description` varchar(10000) NOT NULL,
+    PRIMARY KEY (`id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -80,12 +80,12 @@ CREATE TABLE IF NOT EXISTS `marque` (
 
 DROP TABLE IF EXISTS `panier`;
 CREATE TABLE IF NOT EXISTS `panier` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `utilisateur_id` int NOT NULL,
-  `taille` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_users` (`utilisateur_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                                        `id` int NOT NULL AUTO_INCREMENT,
+                                        `utilisateur_id` int NOT NULL,
+                                        `taille` int NOT NULL,
+                                        PRIMARY KEY (`id`),
+    KEY `fk_users` (`utilisateur_id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -95,17 +95,17 @@ CREATE TABLE IF NOT EXISTS `panier` (
 
 DROP TABLE IF EXISTS `produit`;
 CREATE TABLE IF NOT EXISTS `produit` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `nom` varchar(255) NOT NULL,
-  `image` varchar(255) NOT NULL,
-  `marque_id` int NOT NULL,
-  `prix` double NOT NULL,
-  `quantite` int NOT NULL,
-  `description` varchar(255) NOT NULL,
-  `category` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_marque_produit` (`marque_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                                         `id` int NOT NULL AUTO_INCREMENT,
+                                         `nom` varchar(255) NOT NULL,
+    `image` varchar(255) NOT NULL,
+    `marque_id` int NOT NULL,
+    `prix` double NOT NULL,
+    `quantite` int NOT NULL,
+    `description` varchar(255) NOT NULL,
+    `category` varchar(255) NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_marque_produit` (`marque_id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -115,14 +115,14 @@ CREATE TABLE IF NOT EXISTS `produit` (
 
 DROP TABLE IF EXISTS `reduction`;
 CREATE TABLE IF NOT EXISTS `reduction` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `nom` varchar(255) NOT NULL,
-  `quantite_vrac` int NOT NULL,
-  `prix_vrac` double NOT NULL,
-  `produit_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_reduction_produit` (`produit_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                                           `id` int NOT NULL AUTO_INCREMENT,
+                                           `nom` varchar(255) NOT NULL,
+    `quantite_vrac` int NOT NULL,
+    `prix_vrac` double NOT NULL,
+    `produit_id` int NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `fk_reduction_produit` (`produit_id`)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -130,16 +130,86 @@ CREATE TABLE IF NOT EXISTS `reduction` (
 -- Structure de la table `utilisateur`
 --
 
-DROP TABLE IF EXISTS `utilisateur`;
-CREATE TABLE IF NOT EXISTS `utilisateur` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `role` varchar(255) NOT NULL,
-  `username` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `date_creation` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `tab_admin` (
+                             `id` int(11) NOT NULL,
+                             `nom` varchar(50) NOT NULL,
+                             `prenom` varchar(50) NOT NULL,
+                             `email` varchar(100) NOT NULL,
+                             `MotDePasse` varchar(255) NOT NULL,
+                             `role` enum('SUPER_ADMIN','ADMIN') DEFAULT 'ADMIN',
+                             `date_inscription` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Déchargement des données de la table `tab_admin`
+--
+
+INSERT INTO `tab_admin` (`id`, `nom`, `prenom`, `email`, `MotDePasse`, `role`, `date_inscription`) VALUES
+                                                                                                       (1, 'admin_user', 'admin_user', '', '12345admin', 'ADMIN', '2025-03-23 09:55:57'),
+                                                                                                       (2, 'admin2', 'admin2', 'admin2', 'admin123', 'ADMIN', '2025-03-28 17:45:26');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `tab_client`
+--
+
+CREATE TABLE `tab_client` (
+                              `id` int(100) NOT NULL,
+                              `nom` varchar(100) DEFAULT NULL,
+                              `prenom` varchar(100) DEFAULT NULL,
+                              `email` varchar(255) DEFAULT NULL,
+                              `MotDePasse` varchar(255) NOT NULL,
+                              `date_inscription` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Déchargement des données de la table `tab_client`
+--
+
+INSERT INTO `tab_client` (`id`, `nom`, `prenom`, `email`, `MotDePasse`, `date_inscription`) VALUES
+                                                                                                (7, 'Cristiano', 'Ronaldo', 'cristiano.ronaldo@gmail.com', 'the2ndgoat', '2025-03-22 19:23:12'),
+                                                                                                (10, 'Leo', 'Messi', 'leo.messi@gmail.com', 'thegoat', '2025-03-22 19:23:27'),
+                                                                                                (12, 'Cmarshal', 'Gregouz', 'gregoire.marchal@gmail.com', '123456789+Gregoire', '2025-03-24 11:37:10'),
+                                                                                                (13, 'tes1', 'tes1', 'tes1@gmail.com', 'test1', '2025-03-24 11:51:26'),
+                                                                                                (77, 'test2', 'test2', 'test2@gmail.com', 'test2', '2025-03-24 12:16:42'),
+                                                                                                (80, 'Populaire', 'Jeremy', 'jeremy.populaire@gmail.com', 'root', '2025-03-25 16:51:34'),
+                                                                                                (81, 'Velasco', 'Angel', 'angel.velasco@gmail.com', 'angel123', '2025-03-28 17:32:40'),
+                                                                                                (86, 'ssss', 's', 's', 's', '2025-03-31 08:59:06');
+
+--
+-- Index pour les tables déchargées
+--
+
+--
+-- Index pour la table `tab_admin`
+--
+ALTER TABLE `tab_admin`
+    ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Index pour la table `tab_client`
+--
+ALTER TABLE `tab_client`
+    ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- AUTO_INCREMENT pour les tables déchargées
+--
+
+--
+-- AUTO_INCREMENT pour la table `tab_admin`
+--
+ALTER TABLE `tab_admin`
+    MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT pour la table `tab_client`
+--
+ALTER TABLE `tab_client`
+    MODIFY `id` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
