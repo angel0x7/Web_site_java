@@ -157,7 +157,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
             Connection connexion = daoFactory.getConnection();
 
             PreparedStatement preparedStatement = connexion.prepareStatement(
-                    "DELETE FROM produit WHERE produitID="+idProduct);
+                    "DELETE FROM produit WHERE id="+idProduct);
             preparedStatement.executeUpdate();
         }
         catch (SQLException e) {

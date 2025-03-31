@@ -95,7 +95,7 @@ public class AdminProduitVue extends JFrame {
             rowCounter++;
         }
         table.getColumn("Actions").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Actions").setCellEditor(new ButtonEditor(this));
+        table.getColumn("Actions").setCellEditor(new ButtonEditor(this,table));
     }
 
     private void ouvrirFenetreProduit(Produit produit) {
@@ -166,41 +166,43 @@ public class AdminProduitVue extends JFrame {
     }
 
     public static void main(String[] args) {
-        DaoFactory daoFactory = new DaoFactory("jdbc:mysql://localhost:3306/shopping", "root", "10douzeRg2");
+        DaoFactory daoFactory = new DaoFactory("jdbc:mysql://localhost:3306/shopping", "root", "");
         AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl(daoFactory);
         SwingUtilities.invokeLater(() -> new AdminProduitVue(produitDao));
     }
-    class ButtonEditor extends DefaultCellEditor {
+    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
         private JPanel panel;
         private JButton btnModifier;
         private JButton btnSupprimer;
         private int currentRow;
         private AdminProduitVue adminProduitVue;
+        private JTable table;
 
-        public ButtonEditor(AdminProduitVue adminProduitVue) {
-            super(new JTextField());
+        public ButtonEditor(AdminProduitVue adminProduitVue, JTable table) {
             this.adminProduitVue = adminProduitVue;
-            panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            this.table = table;
 
+            panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
             btnModifier = new JButton("Modifier");
             btnSupprimer = new JButton("Supprimer");
 
             panel.add(btnModifier);
             panel.add(btnSupprimer);
 
-            btnModifier.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    adminProduitVue.ouvrirFenetreProduit(adminProduitVue.getProduitAt(currentRow));
+            btnModifier.addActionListener(e -> {
+                Produit produit = adminProduitVue.getProduitAt(currentRow);
+                if (produit != null) {
+                    adminProduitVue.ouvrirFenetreProduit(produit);
                 }
+                fireEditingStopped();
             });
 
-            btnSupprimer.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    int idProduit = adminProduitVue.getProduitAt(currentRow).getIdProduit();
-                    adminProduitVue.supprimerProduit(idProduit);
+            btnSupprimer.addActionListener(e -> {
+                Produit produit = adminProduitVue.getProduitAt(currentRow);
+                if (produit != null) {
+                    adminProduitVue.supprimerProduit(produit.getIdProduit());
                 }
+                fireEditingStopped();
             });
         }
 
@@ -216,17 +218,20 @@ public class AdminProduitVue extends JFrame {
         }
     }
     class ButtonRenderer extends JPanel implements TableCellRenderer {
+        private JButton btnModifier = new JButton("Modifier");
+        private JButton btnSupprimer = new JButton("Supprimer");
+
         public ButtonRenderer() {
             setLayout(new FlowLayout(FlowLayout.CENTER));
+            add(btnModifier);
+            add(btnSupprimer);
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value instanceof JPanel) {
-                return (JPanel) value;
-            }
             return this;
         }
     }
+
 
 }
