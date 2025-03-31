@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : ven. 21 mars 2025 à 09:11
--- Version du serveur : 8.0.31
--- Version de PHP : 8.0.26
+-- Généré le : lun. 31 mars 2025 à 07:01
+-- Version du serveur : 8.0.41
+-- Version de PHP : 8.3.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,22 @@ SET time_zone = "+00:00";
 --
 -- Base de données : `shopping`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `admin`
+--
+
+DROP TABLE IF EXISTS `admin`;
+CREATE TABLE IF NOT EXISTS `admin` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `adminName` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `date_inscription` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -105,7 +121,15 @@ CREATE TABLE IF NOT EXISTS `produit` (
   `category` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_marque_produit` (`marque_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Déchargement des données de la table `produit`
+--
+
+INSERT INTO `produit` (`id`, `nom`, `image`, `marque_id`, `prix`, `quantite`, `description`, `category`) VALUES
+(1, 'T-shirt', 't-shirt_Zara', 1, 15, 200, 'Un T-shirt 100% coton de qualité', 'Vêtement'),
+(2, 'Pantalon Zara', 'image-pantalon-zara.png', 1, 30, 100, 'Un pantalon basique', 'Vêtement');
 
 -- --------------------------------------------------------
 
