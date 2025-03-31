@@ -12,7 +12,7 @@ public class MainShopWindow extends JFrame {
         setTitle("Accueil - Boutique en ligne");
         setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null);//
 
 
         JPanel panel = new JPanel();
