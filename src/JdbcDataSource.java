@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -7,7 +8,7 @@ public class JdbcDataSource {
     private static Connection connection;
     private static final String URL = "jdbc:mysql://localhost:3306/user";
     private static final String USER = "root";  // Remplacez par votre utilisateur MySQL
-    private static final String PASSWORD = "";  // Remplacez par votre mot de passe MySQL
+    private static final String PASSWORD = "10douzeRg2";  // Remplacez par votre mot de passe MySQL
 
     private JdbcDataSource() {
         try {
@@ -114,16 +115,14 @@ public class JdbcDataSource {
             e.printStackTrace();
         }
     }
-    public static void insertAdmin(String nom, String prenom, String email, String motDePasse, String role) {
-        String query = "INSERT INTO tab_admin (nom, prenom, email, MotDePasse, role) VALUES (?, ?, ?, ?, ?)";
-
+    public static void insertAdmin(String adminName, String email, String motDePasse) {
+        String query = "INSERT INTO admin (adminName, email, password, date_inscription) VALUES (?, ?, ?, ?)";
+        LocalDate myObj = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, nom);
-            pstmt.setString(2, prenom);
-            pstmt.setString(3, email);
-            pstmt.setString(4, motDePasse); // Idéalement hashé
-            pstmt.setString(5, role);
-
+            pstmt.setString(1, adminName);
+            pstmt.setString(2, email);
+            pstmt.setString(3, motDePasse); // Idéalement hashé
+            pstmt.setString(4, myObj.toString());
             int rowsInserted = pstmt.executeUpdate();
             if (rowsInserted > 0) {
                 System.out.println("✅ Administrateur ajouté avec succès !");
