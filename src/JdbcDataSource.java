@@ -8,7 +8,7 @@ public class JdbcDataSource {
     private static Connection connection;
     private static final String URL = "jdbc:mysql://localhost:3306/user";
     private static final String USER = "root";  // Remplacez par votre utilisateur MySQL
-    private static final String PASSWORD = "10douzeRg2";  // Remplacez par votre mot de passe MySQL
+    private static final String PASSWORD = "";  // Remplacez par votre mot de passe MySQL
 
     private JdbcDataSource() {
         try {
