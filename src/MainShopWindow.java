@@ -3,6 +3,7 @@ import Vue.*;
 import javax.swing.*;
 import java.awt.*;
 import Modele.User;
+
 public class MainShopWindow extends JFrame {
     private User currentUser;
     private JPanel contentPanel;
@@ -13,52 +14,66 @@ public class MainShopWindow extends JFrame {
     public MainShopWindow(User user) {
         this.currentUser = user;
         setTitle("Boutique en ligne");
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Met la fenêtre en plein écran
-
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
+        JPanel top = createTop();
         JPanel navBar = createNavBar();
-        add(navBar, BorderLayout.NORTH);
+
+        JPanel topContainer = new JPanel(new BorderLayout());
+        topContainer.add(top, BorderLayout.NORTH);
+        topContainer.add(navBar, BorderLayout.SOUTH);
+
+        add(topContainer, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
 
-        // Ajouter des panneaux distincts
         contentPanel.add(new HomePanel(), "home");
         contentPanel.add(new CategoriesPage(), "Catégories");
         contentPanel.add(new VentesFlashPage(), "Vente Flash");
         contentPanel.add(new VentesPage(), "Vendre");
         contentPanel.add(new PanierPage(), "Panier");
         contentPanel.add(new AdminPanel(), "Admin");
-        contentPanel.add(new UserPanel(), "User"); // Ajout du panneau utilisateur
+        contentPanel.add(new UserPanel(), "User");
 
         showPage("home");
     }
+    private JPanel createTop(){
+        JPanel top = new JPanel();
+        top.setLayout(new FlowLayout(FlowLayout.LEFT));
+        top.setBackground(new Color(30, 30, 30));
 
+        ImageIcon originalIcon = new ImageIcon("Logo.png");
+        Image resizedImage = originalIcon.getImage().getScaledInstance(90, 90, Image.SCALE_SMOOTH);
+        JLabel logoLabel = new JLabel(new ImageIcon(resizedImage));
+
+        top.add(logoLabel);
+        return top;
+    }
     private JPanel createNavBar() {
         JPanel navBar = new JPanel();
-        navBar.setLayout(new GridLayout(1, 7)); // Ajusté pour 7 boutons
+        navBar.setLayout(new GridLayout(1, 7));
+        navBar.setBackground(new Color(30, 30, 30));
 
-        JButton btnCategories = new JButton("Catégories");
-        JButton btnVentesFlash = new JButton("Vente Flash");
-        JButton btnVentes = new JButton("Vendre");
-        JButton btnAccount = new JButton("Mon Compte");
-        JButton btnPanier = new JButton("Panier");
-        btnAdmin = new JButton("Admin");
-        btnUser = new JButton("User");
+        JButton btnCategories = createStyledButton("Catégories");
+        JButton btnVentesFlash = createStyledButton("Vente Flash");
+        JButton btnVentes = createStyledButton("Vendre");
+        JButton btnAccount = createStyledButton("Mon Compte");
+        JButton btnPanier = createStyledButton("Panier");
+        btnAdmin = createStyledButton("Admin");
+        btnUser = createStyledButton("User");
 
         btnCategories.addActionListener(e -> showPage("Catégories"));
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         btnVentes.addActionListener(e -> showPage("Vendre"));
         btnPanier.addActionListener(e -> showPage("Panier"));
         btnAdmin.addActionListener(e -> showPage("Admin"));
-        btnUser.addActionListener(e -> showPage("User")); // Correction du nom
-
+        btnUser.addActionListener(e -> showPage("User"));
         btnAccount.addActionListener(e -> showAccountOptions());
 
-        // Cacher les boutons Admin et User selon le rôle de l'utilisateur
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             btnAdmin.setVisible(false);
         }
@@ -75,6 +90,16 @@ public class MainShopWindow extends JFrame {
         navBar.add(btnUser);
 
         return navBar;
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 20));
+        button.setForeground(Color.WHITE);
+        button.setBackground(new Color(50, 50, 50));
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        return button;
     }
 
     private void showPage(String page) {
@@ -98,11 +123,11 @@ public class MainShopWindow extends JFrame {
                     options[0]
             );
 
-            if (choice == 0) { // Déconnexion
+            if (choice == 0) {
                 currentUser = null;
                 new AuthApp().setVisible(true);
                 dispose();
-            } else if (choice == 1) { // Voir Profil
+            } else if (choice == 1) {
                 JOptionPane.showMessageDialog(this, "Nom : " + currentUser.getNom() + "\nEmail : " + currentUser.getEmail());
             }
         }
