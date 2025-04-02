@@ -2,7 +2,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
-
+import Dao.JdbcDataSource;
 public class SampleDB {
     public static void main(String[] args) {
         Connection conn = JdbcDataSource.getConnection();

@@ -3,7 +3,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-
+import Modele.User;
+import Dao.JdbcDataSource;
 public class AuthApp extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
