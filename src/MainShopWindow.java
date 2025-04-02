@@ -21,15 +21,15 @@ public class MainShopWindow extends JFrame {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        JPanel top = createTop();
-        JPanel navBar = createNavBar();
+        JPanel top = createTop();// Création première étiquette contenant le logo
+        JPanel navBar = createNavBar();// Création 2 eme étiquette contenant les differentes catégories possibles
 
-        JPanel topContainer = new JPanel(new BorderLayout());
+        JPanel topContainer = new JPanel(new BorderLayout());//Création etiquette mettant le logo en haut et les categories en dessous
         topContainer.add(top, BorderLayout.NORTH);
         topContainer.add(navBar, BorderLayout.SOUTH);
 
-        add(topContainer, BorderLayout.NORTH);
-        add(contentPanel, BorderLayout.CENTER);
+        add(topContainer, BorderLayout.NORTH); //Ajout de l'etiquette avec logo et categorie en haut de la page
+        add(contentPanel, BorderLayout.CENTER);//Ajout de l'etiquette les pages en dessous
 
         contentPanel.add(new HomePanel(), "home");
         contentPanel.add(new CategoriesPage(), "Catégories");
@@ -41,7 +41,7 @@ public class MainShopWindow extends JFrame {
 
         showPage("home");
     }
-    private JPanel createTop(){
+    private JPanel createTop(){// Panneau en haut de la page d'acceuil avec le logo
         JPanel top = new JPanel();
         top.setLayout(new FlowLayout(FlowLayout.LEFT));
         top.setBackground(new Color(30, 30, 30));
@@ -53,7 +53,7 @@ public class MainShopWindow extends JFrame {
         top.add(logoLabel);
         return top;
     }
-    private JPanel createNavBar() {
+    private JPanel createNavBar() {// Panneau en dessous du logo avec tout les catégories possibles
         JPanel navBar = new JPanel();
         navBar.setLayout(new GridLayout(1, 7));
         navBar.setBackground(new Color(30, 30, 30));
@@ -92,7 +92,7 @@ public class MainShopWindow extends JFrame {
         return navBar;
     }
 
-    private JButton createStyledButton(String text) {
+    private JButton createStyledButton(String text) {// Fonction qui définit le style des boutons
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 20));
         button.setForeground(Color.WHITE);
@@ -102,11 +102,11 @@ public class MainShopWindow extends JFrame {
         return button;
     }
 
-    private void showPage(String page) {
+    private void showPage(String page) {//Fonction qui affiche la page
         cardLayout.show(contentPanel, page);
     }
 
-    private void showAccountOptions() {
+    private void showAccountOptions() {// Fonction appeler quand on appuie sur la catégorie "MON COMPTE"
         if (currentUser == null) {
             new AuthApp().setVisible(true);
             dispose();
