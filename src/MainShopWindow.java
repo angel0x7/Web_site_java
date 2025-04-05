@@ -10,7 +10,9 @@ public class MainShopWindow extends JFrame {
     private CardLayout cardLayout;
     private JButton btnAdmin;
     private JButton btnUser;
-
+    public MainShopWindow() {
+        this(null);  // Appelle le constructeur principal avec user = null, principalement lorsque l'on se déconnecte
+    }
     public MainShopWindow(User user) {
         this.currentUser = user;
         setTitle("Boutique en ligne");
@@ -107,30 +109,8 @@ public class MainShopWindow extends JFrame {
     }
 
     private void showAccountOptions() {// Fonction appeler quand on appuie sur la catégorie "MON COMPTE"
-        if (currentUser == null) {
-            new AuthApp().setVisible(true);
-            dispose();
-        } else {
-            String[] options = {"Déconnexion", "Voir Profil"};
-            int choice = JOptionPane.showOptionDialog(
-                    this,
-                    "Bonjour, " + currentUser.getNom() + "\nQue voulez-vous faire ?",
-                    "Mon Compte",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]
-            );
+        AccountOptionHandler.handle(this, currentUser);
 
-            if (choice == 0) {
-                currentUser = null;
-                new AuthApp().setVisible(true);
-                dispose();
-            } else if (choice == 1) {
-                JOptionPane.showMessageDialog(this, "Nom : " + currentUser.getNom() + "\nEmail : " + currentUser.getEmail());
-            }
-        }
     }
 
     public static void main(String[] args) {

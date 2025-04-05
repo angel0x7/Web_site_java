@@ -1,10 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.*;
 import Modele.User;
 import Dao.JdbcDataSource;
+
 public class AuthApp extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
@@ -12,7 +11,7 @@ public class AuthApp extends JFrame {
 
     public AuthApp() {
         setTitle("Authentification");
-        setSize(400, 300);
+        setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -21,22 +20,22 @@ public class AuthApp extends JFrame {
 
         // Écrans
         mainPanel.add(createHomeScreen(), "home");
-        mainPanel.add(createLoginScreen(), "login");
-        mainPanel.add(createSignUpScreen(), "signup");
+        mainPanel.add(createLoginScreen(), "Se connecter");
+        mainPanel.add(createSignUpScreen(), "Créer un compte");
 
         add(mainPanel);
     }
 
     private JPanel createHomeScreen() {
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(2, 1, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(2, 1, 10, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-        JButton loginButton = new JButton("Login");
-        JButton signUpButton = new JButton("Sign Up");
+        JButton loginButton = createStyledButton("Se connecter");
+        JButton signUpButton = createStyledButton("Créer un compte");
 
-        loginButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
-        signUpButton.addActionListener(e -> cardLayout.show(mainPanel, "signup"));
+        loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Se connecter"));
+        signUpButton.addActionListener(e -> cardLayout.show(mainPanel, "Créer un compte"));
 
         panel.add(loginButton);
         panel.add(signUpButton);
@@ -45,13 +44,14 @@ public class AuthApp extends JFrame {
 
 
     private JPanel createLoginScreen() {
-        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
         JLabel emailLabel = new JLabel("Email:");
         JTextField emailField = new JTextField();
         JLabel passwordLabel = new JLabel("Mot de passe:");
         JPasswordField passwordField = new JPasswordField();
-        JButton loginButton = new JButton("Connexion");
+        JButton loginButton = createStyledButton("Connexion");
 
         loginButton.addActionListener(e -> {
             String email = emailField.getText();
@@ -86,7 +86,7 @@ public class AuthApp extends JFrame {
 
     // Écran Sign Up (Amélioré)
     private JPanel createSignUpScreen() {
-        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(6, 2, 10, 20));
 
         JLabel nomLabel = new JLabel("Nom:");
         JTextField nomField = new JTextField();
@@ -96,7 +96,7 @@ public class AuthApp extends JFrame {
         JTextField emailField = new JTextField();
         JLabel passwordLabel = new JLabel("Mot de passe:");
         JPasswordField passwordField = new JPasswordField();
-        JButton signUpButton = new JButton("Créer un compte");
+        JButton signUpButton = createStyledButton("Créer un compte");
 
         signUpButton.addActionListener(e -> {
             String nom = nomField.getText().trim();
@@ -153,6 +153,16 @@ public class AuthApp extends JFrame {
         return panel;
     }
 
+    private JButton createStyledButton(String text) { // Style de bouton cohérent
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 18));
+        button.setBackground(new Color(50, 50, 50));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        return button;
+    }
 
 
     private void showLogoutScreen() {
@@ -247,10 +257,8 @@ public class AuthApp extends JFrame {
 
     public static void main(String[] args) {
 
-        SwingUtilities.invokeLater(() -> {
-            AuthApp app = new AuthApp();
-            app.setVisible(true);
+        SwingUtilities.invokeLater(() ->
+            new AuthApp().setVisible(true));
 
-        });
     }
 }
