@@ -1,18 +1,26 @@
 package Vue;
 
+import Dao.JdbcDataSource;
+import Dao.PanierDAO;
 import Dao.ProduitDAO;
 import Modele.Produit;
+import Modele.User;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public class VentesFlashPage extends JPanel {
-    public VentesFlashPage() {
+    private User currentUser;
+
+    public VentesFlashPage(User user) {
+        this.currentUser = user;
+
         setLayout(new BorderLayout());
 
         // Titre principal
@@ -26,7 +34,7 @@ public class VentesFlashPage extends JPanel {
 
         // Container pour afficher les produits en grille
         JPanel productGrid = new JPanel();
-        productGrid.setLayout(new GridLayout(0, 4, 5, 5)); // 4 colonnes pour une grille compacte, avec des marges réduites
+        productGrid.setLayout(new GridLayout(0, 4, 5, 5));
 
         // Ajouter chaque produit sous forme de carte
         for (Produit produit : produits) {
@@ -36,27 +44,26 @@ public class VentesFlashPage extends JPanel {
 
         // Ajouter le conteneur dans un JScrollPane pour le défilement
         JScrollPane scrollPane = new JScrollPane(productGrid);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Marges autour de la grille
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
     }
 
     /**
-     * Méthode pour créer une "carte produit" plus compacte.
+     * Méthode pour créer une "carte produit".
      */
     private JPanel createProductCard(Produit produit) {
         JPanel card = new JPanel();
         card.setLayout(new BorderLayout());
-        card.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true)); // Bordure légère autour de la carte
+        card.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
         card.setBackground(Color.WHITE);
-        card.setPreferredSize(new Dimension(50, 50)); // Taille réduite des cartes
+        card.setPreferredSize(new Dimension(50, 50));
 
         // Partie pour les petits détails (nom, prix)
         JPanel details = new JPanel();
         details.setLayout(new GridLayout(2, 1));
-        details.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1)); // Marges plus fines
 
         JLabel nameLabel = new JLabel(produit.getNomProduit(), SwingConstants.CENTER);
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 12)); // Police plus petite
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 12));
         details.add(nameLabel);
 
         JLabel priceLabel = new JLabel(produit.getPrix() + "€", SwingConstants.CENTER);
@@ -66,22 +73,55 @@ public class VentesFlashPage extends JPanel {
 
         card.add(details, BorderLayout.CENTER);
 
-        // Bouton "Panier" plus petit
+        // Bouton "Panier"
         JButton panierButton = new JButton("Panier");
-        panierButton.setFont(new Font("Arial", Font.PLAIN, 11)); // Police plus petite pour le bouton
+        panierButton.setFont(new Font("Arial", Font.PLAIN, 11));
         panierButton.setBackground(new Color(0, 123, 255));
         panierButton.setForeground(Color.WHITE);
-        panierButton.setFocusPainted(false);
-        panierButton.setBorderPainted(false);
 
         // Événement du clic sur le bouton
         panierButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(VentesFlashPage.this,
-                        "Article ajouté : " + produit.getNomProduit(),
-                        "Confirmation",
-                        JOptionPane.INFORMATION_MESSAGE);
+                try {
+                    // Vérification que l'utilisateur est connecté
+                    if (currentUser == null) {
+                        JOptionPane.showMessageDialog(VentesFlashPage.this,
+                                "Veuillez vous connecter pour ajouter un article au panier.",
+                                "Non connecté",
+                                JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+
+                    int utilisateurId = currentUser.getId();  // Obtenir l'utilisateur connecté
+                    Connection connection = JdbcDataSource.getConnection();
+                    PanierDAO panierDAO = new PanierDAO(connection);
+
+                    // Vérifier ou créer un panier pour l'utilisateur
+                    int panierId = panierDAO.getOrCreatePanier(utilisateurId);
+
+                    // Ajouter ou mettre à jour le produit dans le panier
+                    panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), 1);
+
+                    // Mettre à jour la taille du panier
+                    panierDAO.updatePanierTaille(panierId);
+
+                    // Confirmer l'ajout
+                    JOptionPane.showMessageDialog(VentesFlashPage.this,
+                            "Article ajouté : " + produit.getNomProduit(),
+                            "Confirmation",
+                            JOptionPane.INFORMATION_MESSAGE);
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(VentesFlashPage.this,
+                            "Erreur lors de l'ajout au panier.",
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    // Fermer la connexion
+                    JdbcDataSource.closeConnection();
+                }
             }
         });
 
