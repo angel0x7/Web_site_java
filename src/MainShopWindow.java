@@ -47,7 +47,7 @@ public class MainShopWindow extends JFrame {
         contentPanel.add(panierPage, "Panier");
 
         contentPanel.add(new AdminPanel(), "Admin");
-        contentPanel.add(new UserPanel(), "User");
+        contentPanel.add(new UserPanel(currentUser), "User");
 
         showPage("home"); // Afficher la page d'accueil au démarrage.
     }

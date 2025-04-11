@@ -21,8 +21,11 @@ public class PanierPage extends JPanel {
     private JLabel totalLabel;
     private JPanel produitsPanel;
 
+    private UserPanel userPanel; // Référence vers le panneau UserPanel
+
     public PanierPage(User user) {
         this.currentUser = user;
+        this.userPanel = userPanel; // Initialisation du panneau utilisateur
         this.produitsPanier = new ArrayList<>();
         this.quantitesPanier = new ArrayList<>();
         setLayout(new BorderLayout());
@@ -33,13 +36,13 @@ public class PanierPage extends JPanel {
         title.setFont(new Font("Arial", Font.BOLD, 24));
         add(title, BorderLayout.NORTH);
 
-        // Panneau pour afficher les produits du panier
+        // Panneau des produits
         produitsPanel = new JPanel();
         produitsPanel.setLayout(new BoxLayout(produitsPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(produitsPanel);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Panneau pour le total global et le bouton "Commander"
+        // Panneau inférieur
         JPanel footerPanel = new JPanel(new BorderLayout());
 
         totalLabel = new JLabel("Total : 0€", SwingConstants.RIGHT);
@@ -49,18 +52,11 @@ public class PanierPage extends JPanel {
         JButton commanderButton = new JButton("Commander");
         commanderButton.setBackground(new Color(0, 123, 255));
         commanderButton.setForeground(Color.WHITE);
-        commanderButton.setFocusPainted(false);
-        commanderButton.addActionListener(e -> {
-            double total = calculerTotal();
-            JOptionPane.showMessageDialog(this,
-                    "Montant payé : " + total + "€",
-                    "Confirmation de commande",
-                    JOptionPane.INFORMATION_MESSAGE);
-        });
+        commanderButton.addActionListener(e -> passerCommande()); // Mise à jour ici
         footerPanel.add(commanderButton, BorderLayout.SOUTH);
+
         add(footerPanel, BorderLayout.SOUTH);
 
-        // Charger les produits dans le panier
         if (currentUser != null) {
             chargerProduitsDuPanier();
         } else {
@@ -97,32 +93,21 @@ public class PanierPage extends JPanel {
                 ResultSet rs = stmt.executeQuery();
 
                 while (rs.next()) {
-                    int idProduit = rs.getInt("id");
-                    String nomProduit = rs.getString("nom");
+                    int id = rs.getInt("id");
+                    String nom = rs.getString("nom");
                     double prix = rs.getDouble("prix");
                     int quantite = rs.getInt("quantite");
 
-                    produitsPanier.add(new Produit(idProduit, nomProduit, "", quantite, prix, "", "", 0));
+                    Produit produit = new Produit(id, nom, "", quantite, prix, "", "", 0);
+                    produitsPanier.add(produit);
                     quantitesPanier.add(quantite);
                 }
             }
             afficherProduits();
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Une erreur s'est produite lors du chargement du panier.",
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erreur lors du chargement du panier.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void afficherMessageUtilisateurNonConnecte() {
-        produitsPanel.removeAll();
-        JLabel message = new JLabel("Vous devez être connecté pour voir votre panier.", SwingConstants.CENTER);
-        message.setFont(new Font("Arial", Font.ITALIC, 18));
-        produitsPanel.add(message);
-        produitsPanel.revalidate();
-        produitsPanel.repaint();
     }
 
     private void afficherProduits() {
@@ -147,22 +132,6 @@ public class PanierPage extends JPanel {
             totalProduitLabel.setPreferredSize(new Dimension(150, 30));
             row.add(totalProduitLabel);
 
-            JButton minusButton = new JButton("-");
-            minusButton.addActionListener(e -> modifierQuantite(produit.getIdProduit(), -1));
-            row.add(minusButton);
-
-            JLabel quantiteLabel = new JLabel(String.valueOf(quantite));
-            quantiteLabel.setPreferredSize(new Dimension(30, 30));
-            row.add(quantiteLabel);
-
-            JButton plusButton = new JButton("+");
-            plusButton.addActionListener(e -> modifierQuantite(produit.getIdProduit(), 1));
-            row.add(plusButton);
-
-            JButton deleteButton = new JButton("Supprimer");
-            deleteButton.addActionListener(e -> supprimerProduit(produit.getIdProduit()));
-            row.add(deleteButton);
-
             produitsPanel.add(row);
         }
 
@@ -172,42 +141,107 @@ public class PanierPage extends JPanel {
         totalLabel.setText("Total : " + calculerTotal() + "€");
     }
 
-    private void modifierQuantite(int produitId, int modification) {
-        for (int i = 0; i < produitsPanier.size(); i++) {
-            if (produitsPanier.get(i).getIdProduit() == produitId) {
-                int nouvelleQuantite = quantitesPanier.get(i) + modification;
-                if (nouvelleQuantite > 0) {
-                    quantitesPanier.set(i, nouvelleQuantite);
-                    try (Connection connection = JdbcDataSource.getConnection()) {
-                        String query = "UPDATE element_panier SET quantite = ? WHERE produit_id = ?";
-                        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                            stmt.setInt(1, nouvelleQuantite);
-                            stmt.setInt(2, produitId);
-                            stmt.executeUpdate();
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+    private void passerCommande() {
+        if (produitsPanier.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Votre panier est vide !", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Enregistrer des avis pour chaque produit
+        for (Produit produit : produitsPanier) {
+            JLabel produitLabel = new JLabel("Produit : " + produit.getNomProduit());
+            JTextField titreField = new JTextField(); // Champ pour le titre
+            JTextField commentaireField = new JTextField(); // Champ pour le commentaire
+            SpinnerNumberModel noteModel = new SpinnerNumberModel(5, 0, 10, 1);
+            JSpinner noteSpinner = new JSpinner(noteModel);
+
+            JPanel panel = new JPanel(new GridLayout(5, 1));
+            panel.add(produitLabel);
+            panel.add(new JLabel("Titre de l'avis :"));
+            panel.add(titreField);
+            panel.add(new JLabel("Commentaire :"));
+            panel.add(commentaireField);
+            panel.add(new JLabel("Note (sur 10) :"));
+            panel.add(noteSpinner);
+
+            int result = JOptionPane.showConfirmDialog(
+                    this,
+                    panel,
+                    "Laisser un avis pour " + produit.getNomProduit(),
+                    JOptionPane.OK_CANCEL_OPTION
+            );
+
+            if (result == JOptionPane.OK_OPTION) {
+                String titre = titreField.getText();
+                String commentaire = commentaireField.getText();
+                int note = (int) noteSpinner.getValue();
+
+                if (titre.isEmpty() || commentaire.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Le titre et le commentaire ne peuvent pas être vides.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 } else {
-                    supprimerProduit(produitId); // Si quantité 0, supprimer le produit
+                    enregistrerAvis(produit.getIdProduit(), titre, note, commentaire);
                 }
-                refreshPage();
-                return;
             }
+        }
+
+        // Confirmation
+        JOptionPane.showMessageDialog(this,
+                "Merci pour votre commande !",
+                "Commande validée",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        // Vider le panier
+        produitsPanier.clear();
+        quantitesPanier.clear();
+        produitsPanel.removeAll();
+        totalLabel.setText("Total : 0€");
+        produitsPanel.repaint();
+
+        // Rafraîchir le UserPanel si disponible
+        if (userPanel != null) {
+            userPanel.refreshPage();
         }
     }
 
-    private void supprimerProduit(int produitId) {
+    private void enregistrerAvis(int produitId, String titre, int note, String commentaire) {
         try (Connection connection = JdbcDataSource.getConnection()) {
-            String query = "DELETE FROM element_panier WHERE produit_id = ?";
+            // Requête d’insertion
+            String query = "INSERT INTO avis (produit_id, user_id, titre, note, description) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setInt(1, produitId);
+                // Définir les paramètres
+                stmt.setInt(1, produitId);                  // ID du produit
+                stmt.setInt(2, currentUser.getId());        // ID de l'utilisateur
+                stmt.setString(3, titre);                  // Titre de l'avis
+                stmt.setInt(4, note);                      // Note
+                stmt.setString(5, commentaire);            // Commentaire
+
+                // Exécuter la requête
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
+            // Gestion d'erreur lors de l'insertion
+            JOptionPane.showMessageDialog(this,
+                    "Erreur lors de l'enregistrement de l'avis pour le produit ID " + produitId + ".",
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
-        refreshPage();
+    }
+    private void afficherMessageUtilisateurNonConnecte() {
+        // Supprimer les produits affichés s'il y en a
+        produitsPanel.removeAll();
+
+        // Création d'un message utilisateur non connecté
+        JLabel message = new JLabel("Veuillez vous connecter pour accéder à votre panier.", SwingConstants.CENTER);
+        message.setFont(new Font("Arial", Font.ITALIC, 18));
+        message.setForeground(Color.RED);
+
+        // Ajouter le message au panel
+        produitsPanel.add(message);
+
+        // Réinitialiser et rafraîchir l'affichage
+        produitsPanel.revalidate();
+        produitsPanel.repaint();
     }
 
     private double calculerTotal() {
