@@ -27,7 +27,7 @@ public class MainShopWindow extends JFrame {
         contentPanel = new JPanel(cardLayout);
 
         JPanel top = createTop(); // Barre supérieure avec le logo.
-        JPanel navBar = createNavBar(); // Barre de navigation.
+        JPanel navBar = createNavBar(); // Barre de navigation.Categorie
 
         JPanel topContainer = new JPanel(new BorderLayout());
         topContainer.add(top, BorderLayout.NORTH);
@@ -38,7 +38,7 @@ public class MainShopWindow extends JFrame {
 
         // Créer et ajouter les pages au CardLayout.
         contentPanel.add(new HomePanel(), "home");
-        contentPanel.add(new CategoriesPage(), "Catégories");
+        contentPanel.add(new CategoriesPage(currentUser), "Catégories");
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
         contentPanel.add(new VentesPage(), "Vendre");
 
