@@ -14,33 +14,22 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class AdminReductionVue extends JFrame {
-    private DaoFactory daoFactory;
     private JTable table;
     private DefaultTableModel model;
     private AdminReductionDaoImpl reductionDao;
-    public Reduction getReductionAt(int row) {
-        if (row < 0 || row >= model.getRowCount()) {
-            return null;
-        }
-        return new Reduction(
-                (int) model.getValueAt(row, 0),
-                (String) model.getValueAt(row, 1),
-                (int) model.getValueAt(row, 2),
-                (double) model.getValueAt(row, 3),
-                (int) model.getValueAt(row, 4)
-
-        );
-    }
+    private AdminProduitDaoImpl produitDao;
 
     public AdminReductionVue(AdminReductionDaoImpl reductionDao) {
         this.reductionDao = reductionDao;
+        this.produitDao = new AdminProduitDaoImpl(reductionDao.getDaoFactory());
+
         setTitle("Gestion des Réductions");
         setSize(900, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        String[] columnNames = {"ID", "Nom", "Produit", "Nouveau Prix", "Quantité", "Actions"};
+        String[] columnNames = {"ID", "Nom", "Produit", "Prix", "Quantité", "Actions"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(70);
@@ -65,27 +54,42 @@ public class AdminReductionVue extends JFrame {
 
     private void chargerReductions() {
         model.setRowCount(0);
+
         ArrayList<Reduction> reductions = reductionDao.getAll();
-        AdminProduitDaoImpl adminProduitDao = new AdminProduitDaoImpl(reductionDao.getDaoFactory());
 
         for (Reduction r : reductions) {
-            Produit prod = adminProduitDao.getById(r.getProduit_id());
+            Produit prod = produitDao.getById(r.getProduit_id());
             String nomProduit = (prod != null) ? prod.getNomProduit() : "Inconnu";
 
-            JPanel panelActions = new JPanel();
-            JButton btnModifier = new JButton("Modifier");
-            JButton btnSupprimer = new JButton("Supprimer");
-
-            panelActions.add(btnModifier);
-            panelActions.add(btnSupprimer);
-
-            model.addRow(new Object[]{r.getId(), r.getNom(), nomProduit, r.getPrix_vrac(), r.getQuantite_vrac(), panelActions});
-
-            btnModifier.addActionListener(e -> ouvrirFenetreReduction(r));
-            btnSupprimer.addActionListener(e -> supprimerReduction(r.getId()));
-            table.getColumn("Actions").setCellRenderer(new AdminReductionVue.ButtonRenderer());
-            table.getColumn("Actions").setCellEditor(new AdminReductionVue.ButtonEditor(this,table));
+            model.addRow(new Object[]{
+                    r.getId(),
+                    r.getNom(),
+                    nomProduit,
+                    r.getPrix_vrac(),
+                    r.getQuantite_vrac(),
+                    "Actions"
+            });
         }
+
+        table.getColumn("Actions").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Actions").setCellEditor(new ButtonEditor(this, table));
+    }
+
+    public Reduction getReductionAt(int row) {
+        if (row < 0 || row >= model.getRowCount()) {
+            return null;
+        }
+
+        String nomProduit = (String) model.getValueAt(row, 2);
+        int idProduit = produitDao.getIdByNom(nomProduit); // à implémenter si nécessaire
+
+        return new Reduction(
+                (int) model.getValueAt(row, 0),
+                (String) model.getValueAt(row, 1),
+                (int) model.getValueAt(row, 4),
+                (double) model.getValueAt(row, 3),
+                idProduit
+        );
     }
 
     private void ouvrirFenetreReduction(Reduction reduction) {
@@ -95,14 +99,30 @@ public class AdminReductionVue extends JFrame {
         fenetreReduction.setLocationRelativeTo(this);
 
         JTextField txtNom = new JTextField(reduction != null ? reduction.getNom() : "");
-        JTextField txtProduit = new JTextField(reduction != null ? String.valueOf(reduction.getProduit_id()) : "");
         JTextField txtPrix = new JTextField(reduction != null ? String.valueOf(reduction.getPrix_vrac()) : "");
         JTextField txtQuantite = new JTextField(reduction != null ? String.valueOf(reduction.getQuantite_vrac()) : "");
 
+        // Récupère tous les produits pour le menu déroulant
+        AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl(reductionDao.getDaoFactory());
+        ArrayList<Produit> produits = produitDao.getAll();
+
+        JComboBox<String> comboProduits = new JComboBox<>();
+        for (Produit p : produits) {
+            comboProduits.addItem(p.getNomProduit());
+        }
+
+        // Si modification, on sélectionne le bon produit dans la combo
+        if (reduction != null) {
+            Produit produitActuel = produitDao.getById(reduction.getProduit_id());
+            if (produitActuel != null) {
+                comboProduits.setSelectedItem(produitActuel.getNomProduit());
+            }
+        }
+
         fenetreReduction.add(new JLabel("Nom:"));
         fenetreReduction.add(txtNom);
-        fenetreReduction.add(new JLabel("ID Produit:"));
-        fenetreReduction.add(txtProduit);
+        fenetreReduction.add(new JLabel("Produit:"));
+        fenetreReduction.add(comboProduits);
         fenetreReduction.add(new JLabel("Prix:"));
         fenetreReduction.add(txtPrix);
         fenetreReduction.add(new JLabel("Quantité:"));
@@ -113,11 +133,15 @@ public class AdminReductionVue extends JFrame {
 
         btnEnregistrer.addActionListener(e -> {
             try {
-                int idProduit = Integer.parseInt(txtProduit.getText());
+                String nomProduitSelectionne = (String) comboProduits.getSelectedItem();
+                int idProduit = produitDao.getIdByNom(nomProduitSelectionne);
+
                 Reduction newReduction = new Reduction(
                         (reduction != null ? reduction.getId() : 0),
-                        txtNom.getText(),Integer.parseInt(txtQuantite.getText()),
-                        Double.parseDouble(txtPrix.getText()), idProduit
+                        txtNom.getText(),
+                        Integer.parseInt(txtQuantite.getText()),
+                        Double.parseDouble(txtPrix.getText()),
+                        idProduit
                 );
 
                 if (reduction == null) {
@@ -138,8 +162,8 @@ public class AdminReductionVue extends JFrame {
     }
 
     private void supprimerReduction(int idReduction) {
-        int confirmation = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer cette réduction ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        if (confirmation == JOptionPane.YES_OPTION) {
+        int confirm = JOptionPane.showConfirmDialog(this, "Supprimer cette réduction ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
             reductionDao.supprimer(idReduction);
             chargerReductions();
         }
@@ -150,38 +174,34 @@ public class AdminReductionVue extends JFrame {
         AdminReductionDaoImpl reductionDao = new AdminReductionDaoImpl(daoFactory);
         SwingUtilities.invokeLater(() -> new AdminReductionVue(reductionDao));
     }
+
     class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
         private JPanel panel;
         private JButton btnModifier;
         private JButton btnSupprimer;
         private int currentRow;
-        private AdminReductionVue adminReductionVue;
+        private AdminReductionVue vue;
         private JTable table;
 
-        public ButtonEditor(AdminReductionVue adminReductionVue, JTable table) {
-            this.adminReductionVue = adminReductionVue;
+        public ButtonEditor(AdminReductionVue vue, JTable table) {
+            this.vue = vue;
             this.table = table;
 
             panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
             btnModifier = new JButton("Modifier");
             btnSupprimer = new JButton("Supprimer");
-
             panel.add(btnModifier);
             panel.add(btnSupprimer);
 
             btnModifier.addActionListener(e -> {
-                Reduction reduction = adminReductionVue.getReductionAt(currentRow);
-                if (reduction != null) {
-                    adminReductionVue.ouvrirFenetreReduction(reduction);
-                }
+                Reduction r = vue.getReductionAt(currentRow);
+                if (r != null) vue.ouvrirFenetreReduction(r);
                 fireEditingStopped();
             });
 
             btnSupprimer.addActionListener(e -> {
-                Reduction reduction = adminReductionVue.getReductionAt(currentRow);
-                if (reduction != null) {
-                    adminReductionVue.supprimerReduction(reduction.getId());
-                }
+                Reduction r = vue.getReductionAt(currentRow);
+                if (r != null) vue.supprimerReduction(r.getId());
                 fireEditingStopped();
             });
         }
@@ -197,6 +217,7 @@ public class AdminReductionVue extends JFrame {
             return panel;
         }
     }
+
     class ButtonRenderer extends JPanel implements TableCellRenderer {
         private JButton btnModifier = new JButton("Modifier");
         private JButton btnSupprimer = new JButton("Supprimer");
@@ -212,6 +233,4 @@ public class AdminReductionVue extends JFrame {
             return this;
         }
     }
-
-
 }

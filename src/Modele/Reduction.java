@@ -13,6 +13,7 @@ public class Reduction {
    public Reduction() {};
 
    public Reduction(int id,String nom, int quantite_vrac, double prix_vrac, int produit_id) {
+       this.id = id;
        this.nom = nom;
        this.quantite_vrac = quantite_vrac;
        this.prix_vrac = prix_vrac;
