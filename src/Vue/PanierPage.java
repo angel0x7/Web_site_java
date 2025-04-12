@@ -116,30 +116,82 @@ public class PanierPage extends JPanel {
         for (int i = 0; i < produitsPanier.size(); i++) {
             Produit produit = produitsPanier.get(i);
             int quantite = quantitesPanier.get(i);
+            final int currentIndex = i;
 
-            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            row.setBorder(new EmptyBorder(5, 5, 5, 5));
+            // Panneau du produit
+            JPanel produitPanel = new JPanel(new BorderLayout());
+            produitPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+            produitPanel.setBackground(Color.WHITE);
+            produitPanel.setPreferredSize(new Dimension(600, 100));
+            produitPanel.setMaximumSize(new Dimension(600, 100));
+
+            // Informations sur le produit
+            JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+            infoPanel.setBackground(Color.WHITE);
+            infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
             JLabel nameLabel = new JLabel(produit.getNomProduit());
-            nameLabel.setPreferredSize(new Dimension(150, 30));
-            row.add(nameLabel);
+            nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+            infoPanel.add(nameLabel);
 
-            JLabel priceLabel = new JLabel(produit.getPrix() + "€");
-            priceLabel.setPreferredSize(new Dimension(100, 30));
-            row.add(priceLabel);
+            JLabel priceLabel = new JLabel("Prix : " + produit.getPrix() + "€");
+            priceLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+            priceLabel.setForeground(Color.GRAY);
+            infoPanel.add(priceLabel);
 
-            JLabel totalProduitLabel = new JLabel("Total : " + (produit.getPrix() * quantite) + "€");
-            totalProduitLabel.setPreferredSize(new Dimension(150, 30));
-            row.add(totalProduitLabel);
+            produitPanel.add(infoPanel, BorderLayout.WEST);
 
-            produitsPanel.add(row);
+            // Gestion des quantités
+            JPanel quantitePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            quantitePanel.setBackground(Color.WHITE);
+
+            JButton decrementButton = new JButton("-");
+            decrementButton.addActionListener(e -> {
+                if (quantitesPanier.get(currentIndex) > 1) {
+                    quantitesPanier.set(currentIndex, quantitesPanier.get(currentIndex) - 1);
+                    afficherProduits();
+                }
+            });
+
+            JLabel quantiteLabel = new JLabel("Quantité : " + quantite);
+            JButton incrementButton = new JButton("+");
+            incrementButton.addActionListener(e -> {
+                quantitesPanier.set(currentIndex, quantitesPanier.get(currentIndex) + 1);
+                afficherProduits();
+            });
+
+            quantitePanel.add(decrementButton);
+            quantitePanel.add(quantiteLabel);
+            quantitePanel.add(incrementButton);
+            produitPanel.add(quantitePanel, BorderLayout.CENTER);
+
+            // Bouton Supprimer
+            JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+            actionPanel.setBackground(Color.WHITE);
+            JButton removeButton = new JButton("Supprimer");
+            removeButton.setForeground(Color.RED);
+            removeButton.addActionListener(e -> {
+                if (supprimerProduitDansDB(produit.getIdProduit())) {
+                    produitsPanier.remove(currentIndex);
+                    quantitesPanier.remove(currentIndex);
+                    afficherProduits();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du produit.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            actionPanel.add(removeButton);
+            produitPanel.add(actionPanel, BorderLayout.EAST);
+
+            produitsPanel.add(produitPanel);
         }
 
         produitsPanel.revalidate();
         produitsPanel.repaint();
 
+        // Mise à jour du total
         totalLabel.setText("Total : " + calculerTotal() + "€");
     }
+
 
     private void passerCommande() {
         if (produitsPanier.isEmpty()) {
@@ -147,60 +199,104 @@ public class PanierPage extends JPanel {
             return;
         }
 
-        // Enregistrer des avis pour chaque produit
+        // Création d'une fenêtre de dialogue pour ajouter des avis
+        JDialog avisDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Finalisation de la commande", true);
+        avisDialog.setLayout(new BorderLayout());
+        avisDialog.setSize(600, 400);
+        avisDialog.setLocationRelativeTo(this);
+
+        // Titre
+        JLabel titreLabel = new JLabel("Veuillez laisser vos avis avant de valider la commande");
+        titreLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titreLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titreLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        avisDialog.add(titreLabel, BorderLayout.NORTH);
+
+        // Zone défilable pour ajouter des avis
+        JPanel avisContainer = new JPanel();
+        avisContainer.setLayout(new BoxLayout(avisContainer, BoxLayout.Y_AXIS));
+        avisContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        // Ajouter un panneau distinct pour chaque produit
         for (Produit produit : produitsPanier) {
-            JLabel produitLabel = new JLabel("Produit : " + produit.getNomProduit());
-            JTextField titreField = new JTextField(); // Champ pour le titre
-            JTextField commentaireField = new JTextField(); // Champ pour le commentaire
+            JPanel produitPanel = new JPanel(new BorderLayout());
+            produitPanel.setBorder(BorderFactory.createTitledBorder(produit.getNomProduit()));
+
+            // Champs pour l'avis
+            JPanel inputPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+            inputPanel.add(new JLabel("Titre :"));
+            JTextField titreField = new JTextField();
+            inputPanel.add(titreField);
+
+            inputPanel.add(new JLabel("Commentaire :"));
+            JTextField commentaireField = new JTextField();
+            inputPanel.add(commentaireField);
+
+            inputPanel.add(new JLabel("Note (0-10) :"));
             SpinnerNumberModel noteModel = new SpinnerNumberModel(5, 0, 10, 1);
             JSpinner noteSpinner = new JSpinner(noteModel);
+            inputPanel.add(noteSpinner);
 
-            JPanel panel = new JPanel(new GridLayout(5, 1));
-            panel.add(produitLabel);
-            panel.add(new JLabel("Titre de l'avis :"));
-            panel.add(titreField);
-            panel.add(new JLabel("Commentaire :"));
-            panel.add(commentaireField);
-            panel.add(new JLabel("Note (sur 10) :"));
-            panel.add(noteSpinner);
+            produitPanel.add(inputPanel, BorderLayout.CENTER);
+            avisContainer.add(produitPanel);
 
-            int result = JOptionPane.showConfirmDialog(
-                    this,
-                    panel,
-                    "Laisser un avis pour " + produit.getNomProduit(),
-                    JOptionPane.OK_CANCEL_OPTION
-            );
+            // Bouton pour enregistrer chaque avis
+            JButton saveAvisButton = new JButton("Enregistrer cet avis");
+            produitPanel.add(saveAvisButton, BorderLayout.SOUTH);
 
-            if (result == JOptionPane.OK_OPTION) {
+            saveAvisButton.addActionListener(e -> {
                 String titre = titreField.getText();
                 String commentaire = commentaireField.getText();
                 int note = (int) noteSpinner.getValue();
 
+                // Valider les champs
                 if (titre.isEmpty() || commentaire.isEmpty()) {
                     JOptionPane.showMessageDialog(this, "Le titre et le commentaire ne peuvent pas être vides.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    enregistrerAvis(produit.getIdProduit(), titre, note, commentaire);
+                    return;
                 }
+                enregistrerAvis(produit.getIdProduit(), titre, note, commentaire);
+                saveAvisButton.setEnabled(false); // Bloquer le bouton une fois l'avis enregistré
+                saveAvisButton.setText("Avis enregistré !");
+            });
+        }
+
+        // Ajouter une zone déroulante
+        JScrollPane scrollPane = new JScrollPane(avisContainer);
+        avisDialog.add(scrollPane, BorderLayout.CENTER);
+
+        // Bouton Valider la commande
+        JButton validerButton = new JButton("Valider la commande");
+        validerButton.setFont(new Font("Arial", Font.BOLD, 14));
+        validerButton.setBackground(new Color(0, 128, 0));
+        validerButton.setForeground(Color.WHITE);
+        validerButton.setOpaque(true);
+
+        validerButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this,
+                    "Merci pour votre commande !",
+                    "Commande validée",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            // Vider le panier
+            produitsPanier.clear();
+            quantitesPanier.clear();
+            produitsPanel.removeAll();
+            totalLabel.setText("Total : 0€");
+            produitsPanel.repaint();
+
+            if (userPanel != null) {
+                userPanel.refreshPage();
             }
-        }
+            avisDialog.dispose();
+        });
 
-        // Confirmation
-        JOptionPane.showMessageDialog(this,
-                "Merci pour votre commande !",
-                "Commande validée",
-                JOptionPane.INFORMATION_MESSAGE);
+        // Ajouter au bas de la fenêtre
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(validerButton);
+        avisDialog.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Vider le panier
-        produitsPanier.clear();
-        quantitesPanier.clear();
-        produitsPanel.removeAll();
-        totalLabel.setText("Total : 0€");
-        produitsPanel.repaint();
-
-        // Rafraîchir le UserPanel si disponible
-        if (userPanel != null) {
-            userPanel.refreshPage();
-        }
+        // Afficher la fenêtre
+        avisDialog.setVisible(true);
     }
 
     private void enregistrerAvis(int produitId, String titre, int note, String commentaire) {
@@ -251,4 +347,46 @@ public class PanierPage extends JPanel {
         }
         return total;
     }
+    private boolean supprimerProduitDansDB(int produitId) {
+        // Vérifier si l'utilisateur connecté possède un panier valide
+        if (currentUser.getPanierId() <= 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Erreur : Aucun panier associé à l'utilisateur.",
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return false;
+        }
+
+        try (Connection connection = JdbcDataSource.getConnection()) {
+            // Requête pour supprimer le produit du panier
+            String query = "DELETE FROM element_panier WHERE produit_id = ? AND panier_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, produitId); // ID du produit
+            statement.setInt(2, currentUser.getPanierId()); // ID panier
+
+            int rowsAffected = statement.executeUpdate();
+
+            // Vérifiez si une ligne a été supprimée
+            if (rowsAffected > 0) {
+                return true; // Produit supprimé avec succès
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Produit non trouvé dans le panier.",
+                        "Erreur",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Erreur lors de la suppression du produit du panier.",
+                    "Erreur SQL",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return false;
+        }
+    }
+
 }

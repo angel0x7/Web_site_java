@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ProduitDAO {
 
-    public List<Produit> getAllProduits() {
+    public static List<Produit> getAllProduits() {
         List<Produit> produits = new ArrayList<>();
         String sql = "SELECT * FROM produit";
 

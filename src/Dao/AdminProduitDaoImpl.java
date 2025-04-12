@@ -76,7 +76,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
             // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "insert into produit(nom,image,marque_id,prix,quantite,description,category) values('" + product.getNomProduit() + "','" +
-                             product.getImage() + "'," + product.getIdMarque() + "," + product.getPrix() + ",'" + product.getQuantite() + "','"
+                            product.getImage() + "'," + product.getIdMarque() + "," + product.getPrix() + ",'" + product.getQuantite() + "','"
                             + product.getDescription()+"" + "','"+ product.getCategorie() +"')");
             preparedStatement.executeUpdate();
 

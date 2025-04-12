@@ -87,4 +87,8 @@ public class Produit {
     public void setCategorie(String categorie) {
         this.categorie = categorie;
     }
+
+    public String getImagePath() {
+        return "images/" + image;
+    }
 }

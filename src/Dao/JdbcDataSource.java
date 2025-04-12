@@ -174,7 +174,13 @@ public class JdbcDataSource {
         }
     }
     public static User authenticateUser(String email, String password) {
-        String queryClient = "SELECT id, nom, prenom, email FROM tab_client WHERE email = ? AND MotDePasse = ?";
+        // Requête pour tab_client avec une jointure pour récupérer le panier_id
+        String queryClient = "SELECT c.id, c.nom, c.prenom, c.email, p.id AS panier_id " +
+                "FROM tab_client c " +
+                "LEFT JOIN panier p ON c.id = p.utilisateur_id " +
+                "WHERE c.email = ? AND c.MotDePasse = ?";
+
+        // Requête pour tab_admin
         String queryAdmin = "SELECT id, nom, prenom, email FROM tab_admin WHERE email = ? AND MotDePasse = ?";
 
         Connection conn = null;
@@ -186,7 +192,8 @@ public class JdbcDataSource {
         try {
             conn = JdbcDataSource.getConnection();
 
-            if (conn == null || conn.isClosed()) {  // ✅ Vérification de la connexion
+            // ✅ Vérification de la connexion
+            if (conn == null || conn.isClosed()) {
                 System.err.println("❌ Connexion à la base de données indisponible !");
                 return null;
             }
@@ -197,9 +204,19 @@ public class JdbcDataSource {
             pstmtClient.setString(2, password);
             rsClient = pstmtClient.executeQuery();
 
+            // Si un utilisateur client est trouvé
             if (rsClient.next()) {
-                return new User(rsClient.getInt("id"), rsClient.getString("nom"), rsClient.getString("prenom"),
-                        rsClient.getString("email"), "CLIENT");
+                User user = new User(
+                        rsClient.getInt("id"),
+                        rsClient.getString("nom"),
+                        rsClient.getString("prenom"),
+                        rsClient.getString("email"),
+                        "CLIENT"
+                );
+                // Récupérer l'ID du panier et l'assigner
+                int panierId = rsClient.getInt("panier_id");
+                user.setPanierId(panierId); // Associe le panier_id à l'utilisateur
+                return user;
             }
 
             // Vérification dans la table "tab_admin"
@@ -208,13 +225,19 @@ public class JdbcDataSource {
             pstmtAdmin.setString(2, password);
             rsAdmin = pstmtAdmin.executeQuery();
 
+            // Si un utilisateur admin est trouvé
             if (rsAdmin.next()) {
-                return new User(rsAdmin.getInt("id"), rsAdmin.getString("nom"), rsAdmin.getString("prenom"),
-                        rsAdmin.getString("email"), "ADMIN");
+                return new User(
+                        rsAdmin.getInt("id"),
+                        rsAdmin.getString("nom"),
+                        rsAdmin.getString("prenom"),
+                        rsAdmin.getString("email"),
+                        "ADMIN"
+                );
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace();  // Affichage d'erreurs SQL
         } finally {
             try {
                 if (rsClient != null) rsClient.close();
@@ -227,7 +250,8 @@ public class JdbcDataSource {
             }
         }
 
-        return null;  // Aucun utilisateur trouvé
+        // Aucun utilisateur trouvé
+        return null;
     }
 
 
