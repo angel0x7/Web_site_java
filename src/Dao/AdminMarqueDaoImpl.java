@@ -2,8 +2,8 @@ package Dao;
 
 // import des packages
 
+import Modele.Marque;
 import Modele.Produit;
-import Modele.Reduction;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,14 +12,10 @@ import java.util.ArrayList;
  * implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
  * ProduitDao.
  */
-public class AdminReductionDaoImpl implements AdminReductionDao {
-    public DaoFactory getDaoFactory() {
-        return daoFactory;
-    }
-
+public class AdminMarqueDaoImpl implements AdminMarqueDao {
     private DaoFactory daoFactory;
 
-    public AdminReductionDaoImpl(DaoFactory daoFactory) {
+    public AdminMarqueDaoImpl(DaoFactory daoFactory) {
         this.daoFactory = daoFactory;
     }
 
@@ -28,11 +24,11 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
      * Récupérer de la base de données tous les objets des produits dans une liste
      * @return : liste retournée des objets des produits récupérés
      */
-    public ArrayList<Reduction> getAll() {
-        ArrayList<Reduction> listeReductions = new  ArrayList<Reduction>();
+    public ArrayList<Marque> getAll() {
+        ArrayList<Marque> listeMarques = new  ArrayList<Marque>();
 
         /*
-            Récupérer la liste des reductions de la base de données dans listeProduits
+            Récupérer la liste des produits de la base de données dans listeProduits
         */
         try {
             // connexion
@@ -40,31 +36,31 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
             Statement statement = connexion.createStatement();
 
             // récupération des produits de la base de données avec la requete SELECT
-            ResultSet resultats = statement.executeQuery("select * from reduction");
+            ResultSet resultats = statement.executeQuery("select * from marque");
 
             // 	Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
             while (resultats.next()) {
                 // récupérer les 3 champs de la table produits dans la base de données
-                int idReduction = resultats.getInt(1);
-                String nomReduction = resultats.getString(2);
-                double prix_vrac = resultats.getDouble(4);
-                int quantite_vrac = resultats.getInt(3);
-                int produit_id = resultats.getInt(5);
+                int idMarque = resultats.getInt(1);
+                String nom = resultats.getString(2);
+                String image = resultats.getString(3);
+                String description = resultats.getString(4);
+
 
                 // instancier un objet de Produit avec ces 3 champs en paramètres
-                Reduction reduction = new Reduction(idReduction,nomReduction,quantite_vrac,prix_vrac,produit_id);
+                Marque marque = new Marque(idMarque,nom,image,description);
 
                 // ajouter ce produit à listeProduits
-                listeReductions.add(reduction);
+                listeMarques.add(marque);
             }
         }
         catch (SQLException e) {
             //traitement de l'exception
             e.printStackTrace();
-            System.out.println("Extraction de la liste de reductions impossible");
+            System.out.println("Extraction de la liste de produits impossible");
         }
 
-        return listeReductions;
+        return listeMarques;
     }
 
     @Override
@@ -72,96 +68,93 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
      Ajouter un nouveau produit en paramètre dans la base de données
      @params : product = objet du Produit en paramètre à insérer dans la base de données
      */
-    public void ajouter(Reduction reduction) {
+    public void ajouter(Marque marque) {
         try {
             // connexion
             Connection connexion = daoFactory.getConnection();
             // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
-                    "insert into reduction(nom,prix_vrac,produit_id,quantite_vrac) values('" + reduction.getNom() + "'," +
-                             reduction.getPrix_vrac() + "," + reduction.getProduit_id() + "," + reduction.getQuantite_vrac() + ")");
+                    "insert into marque(nom,image,description) values('" + marque.getNom() + "','" +
+                            marque.getImage() + "','" + marque.getDescription() + "')");
             preparedStatement.executeUpdate();
 
         }
         catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Ajout de la réduction impossible");
+            System.out.println("Ajout du produit impossible");
         }
     }
 
     @Override
-    public Reduction getById(int id) {
-        Reduction reduction = null;
+    public Marque getById(int id) {
+        Marque marque = null;
         try {
             // connexion
             Connection connexion = daoFactory.getConnection();;
             Statement statement = connexion.createStatement();
 
             // Exécution de la requête SELECT pour récupérer le produit de l'id dans la base de données
-            ResultSet resultats = statement.executeQuery("select * from reduction where id="+id);
+            ResultSet resultats = statement.executeQuery("select * from marque where id="+id);
 
             // 	Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
             while (resultats.next()) {
                 // récupérer les 3 champs de la table produits dans la base de données
                 // récupération des 3 champs du produit de la base de données
-                int idReduction = resultats.getInt(1);
-                String nomReduction = resultats.getString(2);
-                double prix_vrac = resultats.getDouble(4);
-                int quantite_vrac = resultats.getInt(3);
-                int produit_id = resultats.getInt(5);
+                int idMarque = resultats.getInt(1);
+                String nom = resultats.getString(2);
+                String image = resultats.getString(3);
+                String description = resultats.getString(4);
 
                 // Si l'id du produit est trouvé, l'instancier et sortir de la boucle
-                if (id == idReduction) {
+                if (id == idMarque) {
                     // instanciation de l'objet de Produit avec ces 3 champs
-                     reduction = new Reduction(idReduction,nomReduction,quantite_vrac,prix_vrac,produit_id);
+                     marque = new Marque(idMarque,nom,image,description);
                     break;
                 }
             }
         }
         catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Reduction non trouvé dans la base de données");
+            System.out.println("Produit non trouvé dans la base de données");
         }
-        return reduction;
+        return marque;
     }
 
     @Override
-    public Reduction modifier(Reduction reduction) {
-        Reduction old_reduction = getById(reduction.getId());
+    public Marque modifier(Marque marque) {
+        Marque old_marque = getById(marque.getId());
         try {
             // connexion
             Connection connexion = daoFactory.getConnection();
 
             // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
-                    "UPDATE reduction SET nom='"+reduction.getNom()+
-                            "',prix_vrac="+reduction.getPrix_vrac()+",produit_id="+reduction.getProduit_id()+
-                            ",quantite_vrac="+reduction.getQuantite_vrac()+" where id ="+old_reduction.getId());
+                    "UPDATE marque SET nom='"+marque.getNom()+
+                            "',image='"+marque.getImage()+"',description='"+marque.getDescription()+"'");
             preparedStatement.executeUpdate();
         }
         catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Modification de la réduction impossible");
+            System.out.println("Modification du produit impossible");
         }
 
-        return reduction;
+        return marque;
     }
 
     @Override
-    public void supprimer(int idReduction) {
+    public void supprimer(int idMarque) {
         try {
             // connexion
             Connection connexion = daoFactory.getConnection();
 
             PreparedStatement preparedStatement = connexion.prepareStatement(
-                    "DELETE FROM reduction WHERE id="+idReduction);
+                    "DELETE FROM marque WHERE id="+idMarque);
             preparedStatement.executeUpdate();
         }
         catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Suppression de la reduction impossible");
+            System.out.println("Suppression du produit impossible");
         }
 
     }
-
 }

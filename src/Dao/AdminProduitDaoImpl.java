@@ -126,6 +126,26 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         return product;
     }
 
+    public int getIdByNom(String nomProduit) {
+        int idProduit = -1;
+        String sql = "SELECT id FROM produit WHERE nom = ?";
+
+        try (Connection conn = daoFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nomProduit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    idProduit = rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return idProduit;
+    }
+
     @Override
     public Produit modifier(Produit product) {
         Produit old_produit = getById(product.getIdProduit());
