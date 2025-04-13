@@ -1,7 +1,9 @@
 package Vue;
 
 import Dao.JdbcDataSource;
+import Dao.ProduitDAO;
 import Modele.Produit;
+import Modele.Reduction;
 import Modele.User;
 
 import javax.swing.*;
@@ -123,11 +125,11 @@ public class PanierPage extends JPanel {
             JPanel produitPanel = new JPanel(new BorderLayout());
             produitPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
             produitPanel.setBackground(Color.WHITE);
-            produitPanel.setPreferredSize(new Dimension(600, 100));
-            produitPanel.setMaximumSize(new Dimension(600, 100));
+            produitPanel.setPreferredSize(new Dimension(600, 120));
+            produitPanel.setMaximumSize(new Dimension(600, 120));
 
             // Informations produit
-            JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+            JPanel infoPanel = new JPanel(new GridLayout(3, 1)); // Passage à 3 lignes pour inclure les infos sur la réduction
             infoPanel.setBackground(Color.WHITE);
             infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -135,10 +137,21 @@ public class PanierPage extends JPanel {
             nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
             infoPanel.add(nameLabel);
 
-            JLabel priceLabel = new JLabel("Prix : " + produit.getPrix() + "€");
+            JLabel priceLabel = new JLabel("Prix unitaire : " + produit.getPrix() + "€");
             priceLabel.setFont(new Font("Arial", Font.PLAIN, 12));
             priceLabel.setForeground(Color.GRAY);
             infoPanel.add(priceLabel);
+
+            // Ajout des informations sur les réductions (si présentes)
+            Reduction reduction = ProduitDAO.getReductionByProduitId(produit.getIdProduit());
+            if (reduction != null) {
+                JLabel reductionLabel = new JLabel(
+                        String.format("Offre : %d pour %.2f €", reduction.getQuantite_vrac(), reduction.getPrix_vrac())
+                );
+                reductionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+                reductionLabel.setForeground(Color.RED);
+                infoPanel.add(reductionLabel);
+            }
 
             produitPanel.add(infoPanel, BorderLayout.WEST);
 
@@ -148,20 +161,17 @@ public class PanierPage extends JPanel {
 
             JButton decrementButton = new JButton("-");
             int finalI = i;
-            int finalI4 = i;
             decrementButton.addActionListener(e -> {
                 if (quantitesPanier.get(finalI) > 1) {
-                    quantitesPanier.set(finalI, quantitesPanier.get(finalI4) - 1);
+                    quantitesPanier.set(finalI, quantitesPanier.get(finalI) - 1);
                     afficherProduits();
                 }
             });
 
             JLabel quantiteLabel = new JLabel("Quantité : " + quantite);
             JButton incrementButton = new JButton("+");
-            int finalI1 = i;
-            int finalI3 = i;
             incrementButton.addActionListener(e -> {
-                quantitesPanier.set(finalI1, quantitesPanier.get(finalI3) + 1);
+                quantitesPanier.set(finalI, quantitesPanier.get(finalI) + 1);
                 afficherProduits();
             });
 
@@ -175,11 +185,10 @@ public class PanierPage extends JPanel {
             actionPanel.setBackground(Color.WHITE);
             JButton removeButton = new JButton("Supprimer");
             removeButton.setForeground(Color.RED);
-            int finalI2 = i;
             removeButton.addActionListener(e -> {
                 if (supprimerProduitDansDB(produit.getIdProduit())) {
-                    produitsPanier.remove(finalI2);
-                    quantitesPanier.remove(finalI2);
+                    produitsPanier.remove(finalI);
+                    quantitesPanier.remove(finalI);
                     afficherProduits();
                 } else {
                     JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du produit.", "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -187,6 +196,22 @@ public class PanierPage extends JPanel {
             });
             actionPanel.add(removeButton);
             produitPanel.add(actionPanel, BorderLayout.EAST);
+
+            // Calcul du prix avec ou sans réduction
+            double prixTotalParProduit;
+            if (reduction != null && quantite >= reduction.getQuantite_vrac()) {
+                int lotCount = quantite / reduction.getQuantite_vrac(); // Nombre de lots en vrac
+                int remainingItems = quantite % reduction.getQuantite_vrac(); // Articles restants
+
+                prixTotalParProduit = (lotCount * reduction.getPrix_vrac()) + (remainingItems * produit.getPrix());
+            } else {
+                prixTotalParProduit = quantite * produit.getPrix();
+            }
+
+            JLabel prixFinalLabel = new JLabel(String.format("Prix total pour ce produit : %.2f €", prixTotalParProduit));
+            prixFinalLabel.setFont(new Font("Arial", Font.BOLD, 13));
+            prixFinalLabel.setForeground(new Color(34, 139, 34));
+            produitPanel.add(prixFinalLabel, BorderLayout.SOUTH);
 
             produitsPanel.add(produitPanel);
         }
@@ -273,9 +298,28 @@ public class PanierPage extends JPanel {
      */
     private double calculerTotal() {
         double total = 0;
+
         for (int i = 0; i < produitsPanier.size(); i++) {
-            total += produitsPanier.get(i).getPrix() * quantitesPanier.get(i);
+            Produit produit = produitsPanier.get(i);
+            int quantite = quantitesPanier.get(i);
+
+            // Récupérer la réduction du produit
+            Reduction reduction = ProduitDAO.getReductionByProduitId(produit.getIdProduit());
+
+            if (reduction != null && quantite >= reduction.getQuantite_vrac()) {
+                // Calculer le prix pour les lots en vrac
+                int lotCount = quantite / reduction.getQuantite_vrac();
+                total += lotCount * reduction.getPrix_vrac();
+
+                // Calculer le prix pour les articles restants au tarif unique
+                int remainingItems = quantite % reduction.getQuantite_vrac();
+                total += remainingItems * produit.getPrix();
+            } else {
+                // Si pas de réduction ou quantité insuffisante, utiliser le prix normal
+                total += quantite * produit.getPrix();
+            }
         }
+
         return total;
     }
 

@@ -12,64 +12,67 @@ import Dao.JdbcDataSource;
 import Modele.User;
 
 public class UserPanel extends JPanel {
-    private User currentUser; // L'utilisateur actuellement connecté
-    private JTable historiqueTable; // Tableau pour afficher l'historique des commandes
+    private User currentUser; // Utilisateur actuellement connecté
+    private JTable historiqueTable; // Tableau pour l’historique des commandes
     private DefaultTableModel tableModel; // Modèle pour le tableau
     private JButton avisButton; // Bouton pour ajouter un avis
-    private JButton detailsCommandeButton; // Bouton pour afficher les détails de la commande
+    private JButton detailsCommandeButton; // Bouton pour afficher les détails d'une commande
+    private JButton refreshButton; // Bouton pour rafraîchir les commandes
 
+    /**
+     * Constructeur de UserPanel.
+     *
+     * @param user L'utilisateur actuellement connecté.
+     */
     public UserPanel(User user) {
         this.currentUser = user;
+
+        // Définir le layout principal de UserPanel
         this.setLayout(new BorderLayout());
 
-        // Initialisation du modèle de table
-        tableModel = new DefaultTableModel(new Object[]{"Commande", "Produits"}, 0);
+        // Initialiser l'affichage des commandes (table)
+        tableModel = new DefaultTableModel(new Object[]{"Commande ID", "Produit", "Prix Total"}, 0);
         historiqueTable = new JTable(tableModel);
 
-        // Rendu personnalisé pour la colonne Produits
-        DefaultTableCellRenderer produitsCellRenderer = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                JTextArea textArea = new JTextArea();
-                textArea.setWrapStyleWord(true);
-                textArea.setLineWrap(true);
-                textArea.setText(value != null ? value.toString() : "");
-                textArea.setFont(table.getFont());
-                textArea.setEditable(false);
-                if (isSelected) {
-                    textArea.setBackground(table.getSelectionBackground());
-                    textArea.setForeground(table.getSelectionForeground());
-                } else {
-                    textArea.setBackground(table.getBackground());
-                    textArea.setForeground(table.getForeground());
-                }
-                return textArea;
-            }
-        };
-        historiqueTable.getColumnModel().getColumn(1).setCellRenderer(produitsCellRenderer);
-        historiqueTable.setRowHeight(50);
+        // Personnaliser l'affichage de la table
+        historiqueTable.setFillsViewportHeight(true);
+        historiqueTable.setRowHeight(25);
+        historiqueTable.getTableHeader().setReorderingAllowed(false);
 
-        // Ajout d'un scroll pane pour le tableau
+        // Centrer le contenu des colonnes dans la table
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        for (int i = 0; i < historiqueTable.getColumnCount(); i++) {
+            historiqueTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // Ajouter le tableau dans un JScrollPane pour le défilement
         JScrollPane scrollPane = new JScrollPane(historiqueTable);
         this.add(scrollPane, BorderLayout.CENTER);
 
-        // Panneau pour les boutons en bas
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        // Ajouter un panneau pour les boutons d'action (en bas)
+        JPanel actionsPanel = new JPanel();
+        actionsPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
-        // Bouton "Ajouter un Avis"
-        avisButton = new JButton("Ajouter un Avis");
-        avisButton.addActionListener(e -> ajouterAvis());
-        buttonPanel.add(avisButton);
-
-        // Bouton "Détails Commande"
-        detailsCommandeButton = new JButton("Détails Commande");
+        // Bouton pour afficher les détails d'une commande
+        detailsCommandeButton = new JButton("Détails de la commande");
         detailsCommandeButton.addActionListener(e -> afficherDetailsCommande());
-        buttonPanel.add(detailsCommandeButton);
+        actionsPanel.add(detailsCommandeButton);
 
-        this.add(buttonPanel, BorderLayout.SOUTH);
+        // Bouton pour ajouter un avis
+        avisButton = new JButton("Ajouter un avis");
+        avisButton.addActionListener(e -> ajouterAvis());
+        actionsPanel.add(avisButton);
 
-        // Chargement initial de l'historique des commandes
-        chargerHistorique();
+        // Bouton pour rafraîchir l'historique des commandes
+        refreshButton = new JButton("Rafraîchir");
+        refreshButton.addActionListener(e -> refreshPage());
+        actionsPanel.add(refreshButton);
+
+        this.add(actionsPanel, BorderLayout.SOUTH);
+
+        // Charger l'historique des commandes lors de l'initialisation
+        refreshPage();
     }
 
     /**
@@ -84,29 +87,39 @@ public class UserPanel extends JPanel {
      */
     private void chargerHistorique() {
         try (Connection conn = JdbcDataSource.getConnection()) {
-            // Requête pour récupérer les commandes et leurs produits associés
+            // Requête SQL pour récupérer les commandes de l'utilisateur
             String query = """
-                SELECT p.id AS commande_id, GROUP_CONCAT(prod.nom SEPARATOR ', ') AS produits
+                SELECT p.id AS commande_id, 
+                       prod.nom AS produit,
+                       IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
+                          FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
+                          ep.quantite * prod.prix
+                       ) AS prix_total
                 FROM panier p
                 LEFT JOIN element_panier ep ON p.id = ep.panier_id
                 LEFT JOIN produit prod ON ep.produit_id = prod.id
+                LEFT JOIN reduction r ON prod.id = r.produit_id
                 WHERE p.utilisateur_id = ?
-                GROUP BY p.id;
             """;
 
             PreparedStatement statement = conn.prepareStatement(query);
-            statement.setInt(1, currentUser.getId()); // remplacer par l'ID de l'utilisateur connecté
+            statement.setInt(1, currentUser.getId()); // ID de l'utilisateur connecté
             ResultSet resultSet = statement.executeQuery();
 
-            // Réinitialisation des données du tableau
+            // Réinitialisation des données dans le tableau
             tableModel.setRowCount(0);
 
-            // Parcourir les résultats de la requête pour construire la table
+            // Ajouter les commandes et produits dans la table
             while (resultSet.next()) {
                 int commandeId = resultSet.getInt("commande_id");
-                String produits = resultSet.getString("produits");
-                if (produits == null) produits = "Aucun produit trouvé"; // Si aucun produit n'est associé
-                tableModel.addRow(new Object[]{"Commande " + commandeId, produits});
+                String produit = resultSet.getString("produit");
+                double prixTotal = resultSet.getDouble("prix_total");
+
+                tableModel.addRow(new Object[]{
+                        "Commande " + commandeId, // Colonne 1 : ID de la commande
+                        produit,                  // Colonne 2 : Nom du produit
+                        String.format("%.2f €", prixTotal) // Colonne 3 : Prix total formaté
+                });
             }
         } catch (Exception e) {
             //e.printStackTrace();
@@ -116,6 +129,7 @@ public class UserPanel extends JPanel {
 
     /**
      * Méthode pour afficher les détails d'une commande sélectionnée.
+     * Affiche les détails des produits commandés et prend en compte les réductions.
      */
     private void afficherDetailsCommande() {
         int selectedRow = historiqueTable.getSelectedRow();
@@ -128,27 +142,32 @@ public class UserPanel extends JPanel {
         String commandeIdStr = tableModel.getValueAt(selectedRow, 0).toString();
         int commandeId = Integer.parseInt(commandeIdStr.replace("Commande ", ""));
 
-        // Fenêtre affichant les détails
+        // Fenêtre détaillée
         JDialog detailsDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Détails de la commande", true);
         detailsDialog.setLayout(new BorderLayout());
         detailsDialog.setSize(600, 400);
         detailsDialog.setLocationRelativeTo(this);
 
-        // Titre
         JLabel titreLabel = new JLabel("Détails de la commande #" + commandeId);
         titreLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titreLabel.setFont(new Font("Arial", Font.BOLD, 16));
         detailsDialog.add(titreLabel, BorderLayout.NORTH);
 
-        // Détails des produits de la commande
         JTextArea detailsArea = new JTextArea();
         detailsArea.setEditable(false);
 
         try (Connection conn = JdbcDataSource.getConnection()) {
             String query = """
-                SELECT p.nom, ep.quantite, p.prix
+                SELECT prod.nom AS produit, ep.quantite AS quantite, 
+                       prod.prix AS prix_unitaire, 
+                       r.nom AS reduction_nom, r.quantite_vrac, r.prix_vrac,
+                       IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac,
+                          FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix,
+                          ep.quantite * prod.prix
+                       ) AS sous_total
                 FROM element_panier ep
-                JOIN produit p ON ep.produit_id = p.id
+                JOIN produit prod ON ep.produit_id = prod.id
+                LEFT JOIN reduction r ON prod.id = r.produit_id
                 WHERE ep.panier_id = ?
             """;
             PreparedStatement statement = conn.prepareStatement(query);
@@ -159,12 +178,23 @@ public class UserPanel extends JPanel {
             double total = 0;
 
             while (resultSet.next()) {
-                String produitNom = resultSet.getString("nom");
+                String produit = resultSet.getString("produit");
                 int quantite = resultSet.getInt("quantite");
-                double prixUnitaire = resultSet.getDouble("prix");
-                double sousTotal = quantite * prixUnitaire;
+                double prixUnitaire = resultSet.getDouble("prix_unitaire");
+                String reductionNom = resultSet.getString("reduction_nom");
+                double sousTotal = resultSet.getDouble("sous_total");
 
-                detailsBuilder.append(String.format("%s (x%d) - %.2f €/unité : %.2f €\n", produitNom, quantite, prixUnitaire, sousTotal));
+                if (reductionNom != null) {
+                    detailsBuilder.append(String.format(
+                            "%s (x%d) - %.2f €/unité - Réduction : %s => Sous-total : %.2f €\n",
+                            produit, quantite, prixUnitaire, reductionNom, sousTotal
+                    ));
+                } else {
+                    detailsBuilder.append(String.format(
+                            "%s (x%d) - %.2f €/unité => Sous-total : %.2f €\n",
+                            produit, quantite, prixUnitaire, sousTotal
+                    ));
+                }
                 total += sousTotal;
             }
 
@@ -177,11 +207,9 @@ public class UserPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Erreur lors de la récupération des détails de la commande.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
 
-        // Ajouter les détails (avec scrolling)
         JScrollPane scrollPane = new JScrollPane(detailsArea);
         detailsDialog.add(scrollPane, BorderLayout.CENTER);
 
-        // Bouton pour fermer la fenêtre
         JButton fermerButton = new JButton("Fermer");
         fermerButton.addActionListener(e -> detailsDialog.dispose());
         JPanel buttonPanel = new JPanel();
@@ -192,9 +220,90 @@ public class UserPanel extends JPanel {
     }
 
     /**
-     * Méthode pour ajouter un avis (logique existante).
+     * Méthode pour ajouter un avis sur une commande ou un produit.
      */
     private void ajouterAvis() {
-        // Implémentation pour ajouter un avis
+        int selectedRow = historiqueTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner un produit pour ajouter un avis.", "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String produitNom = (String) tableModel.getValueAt(selectedRow, 1);
+        int produitId = getProductIdByName(produitNom);
+
+        if (produitId == -1) {
+            JOptionPane.showMessageDialog(this, "Impossible de trouver le produit sélectionné.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Afficher une boîte de dialogue pour saisir l'avis
+        JTextField titreField = new JTextField();
+        JTextField noteField = new JTextField();
+        JTextArea descriptionArea = new JTextArea(5, 20);
+
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(new JLabel("Titre de l'avis :"));
+        panel.add(titreField);
+        panel.add(new JLabel("Note (1 à 5) :"));
+        panel.add(noteField);
+        panel.add(new JLabel("Description :"));
+        panel.add(new JScrollPane(descriptionArea));
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Ajouter un avis", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String titre = titreField.getText();
+            int note;
+            try {
+                note = Integer.parseInt(noteField.getText());
+                if (note < 1 || note > 5) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "La note doit être un nombre entre 1 et 5.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            String description = descriptionArea.getText();
+
+            // Insérer les données dans la base de données
+            try (Connection conn = JdbcDataSource.getConnection()) {
+                String insertQuery = """
+                    INSERT INTO avis (titre, note, description, produit_id, user_id)
+                    VALUES (?, ?, ?, ?, ?)
+                """;
+
+                PreparedStatement statement = conn.prepareStatement(insertQuery);
+                statement.setString(1, titre);
+                statement.setInt(2, note);
+                statement.setString(3, description);
+                statement.setInt(4, produitId);
+                statement.setInt(5, currentUser.getId());
+                statement.executeUpdate();
+
+                JOptionPane.showMessageDialog(this, "Votre avis a été ajouté avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout de votre avis.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
+
+    /**
+     * Méthode pour récupérer l'ID d'un produit à partir de son nom.
+     */
+    private int getProductIdByName(String produitNom) {
+        try (Connection conn = JdbcDataSource.getConnection()) {
+            String query = "SELECT id FROM produit WHERE nom = ?";
+            PreparedStatement statement = conn.prepareStatement(query);
+            statement.setString(1, produitNom);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt("id");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1; // Retourne -1 si le produit n'est pas trouvé
+    }
+
 }
