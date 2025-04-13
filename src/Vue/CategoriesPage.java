@@ -6,9 +6,9 @@ import Modele.Produit;
 import Modele.User;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,141 +19,193 @@ import java.util.List;
 public class CategoriesPage extends JPanel {
 
     private User currentUser; // L'utilisateur connecté
-    private JTextField searchField; // Barre de recherche
-    private JButton searchButton; // Bouton de recherche
-    private JPanel productsPanel; // Panneau pour afficher les produits
+    private JTextField searchField;
+    private JButton searchButton;
+    private JPanel productsPanel;
 
     public CategoriesPage(User user) {
-        this.currentUser = user; // L'utilisateur qui utilise la page
+        this.currentUser = user;
 
-        setLayout(new BorderLayout());
+        // Mise en page de la page principale
+        this.setLayout(new BorderLayout());
+        this.setBackground(Color.WHITE);
 
-        // Barre de recherche en haut
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        searchField = new JTextField(20);
-        searchButton = new JButton("Rechercher");
-        searchPanel.add(new JLabel("Rechercher un produit :"));
-        searchPanel.add(searchField);
-        searchPanel.add(searchButton);
+        // Ajouter une barre de recherche en haut
+        JPanel searchPanel = createSearchPanel();
+        this.add(searchPanel, BorderLayout.NORTH);
 
-        add(searchPanel, BorderLayout.NORTH);
+        // Zone d'affichage des produits
+        productsPanel = new JPanel(new GridLayout(0, 4, 15, 15)); // Grille avec 4 colonnes
+        productsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        productsPanel.setBackground(Color.WHITE);
 
-        // Panneau des produits
-        productsPanel = new JPanel();
-        productsPanel.setLayout(new GridLayout(0, 3, 10, 10)); // Affiche jusqu'à 3 produits par ligne
-        JScrollPane scrollPane = new JScrollPane(productsPanel);
-        add(scrollPane, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(productsPanel); // Défilement des produits
+        scrollPane.setBorder(null);
+        this.add(scrollPane, BorderLayout.CENTER);
 
-        // Charger et afficher tous les produits au démarrage
+        // Charger et afficher tous les produits au lancement
         loadAndDisplayProducts("");
-
-        // Gestion de l'événement de recherche
-        searchButton.addActionListener((ActionEvent e) -> {
-            String keyword = searchField.getText().trim();
-            loadAndDisplayProducts(keyword);
-        });
     }
 
     /**
-     * Charge et affiche les produits en fonction du mot-clé de recherche.
+     * Crée une barre de recherche avec champ texte et bouton.
+     */
+    private JPanel createSearchPanel() {
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new BorderLayout());
+        searchPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        searchPanel.setBackground(Color.WHITE);
+
+        searchField = new JTextField();
+        searchField.setFont(new Font("Arial", Font.PLAIN, 16));
+        searchField.setPreferredSize(new Dimension(200, 30));
+        searchPanel.add(searchField, BorderLayout.CENTER);
+
+        searchButton = new JButton("Rechercher");
+        searchButton.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchButton.setPreferredSize(new Dimension(120, 30));
+        searchButton.addActionListener(e -> loadAndDisplayProducts(searchField.getText())); // Recherche déclenchée
+        searchPanel.add(searchButton, BorderLayout.EAST);
+
+        return searchPanel;
+    }
+
+    /**
+     * Charge et affiche les produits depuis la base de données selon un mot-clé.
      *
-     * @param keyword Le mot-clé pour filtrer les produits.
+     * @param keyword Mot-clé pour filtrer les produits (par nom ou catégorie).
      */
     private void loadAndDisplayProducts(String keyword) {
-        productsPanel.removeAll(); // Nettoyer les produits affichés
+        // Effacer les produits affichés précédemment
+        productsPanel.removeAll();
 
-        List<Produit> produits = fetchProducts(keyword); // Charger les produits depuis la base
-        if (produits.isEmpty()) {
-            productsPanel.add(new JLabel("Aucun produit trouvé."));
-        } else {
-            for (Produit produit : produits) {
-                productsPanel.add(createProductCard(produit)); // Créer une carte pour chaque produit
-            }
+        // Récupérer les produits depuis la base de données
+        List<Produit> produits = fetchProducts(keyword);
+
+        // Ajouter chaque produit comme une carte
+        for (Produit produit : produits) {
+            productsPanel.add(createProductCard(produit));
         }
 
+        // Rafraîchir l'affichage
         productsPanel.revalidate();
         productsPanel.repaint();
     }
 
     /**
-     * Récupère les produits depuis la base de données selon un mot-clé.
+     * Crée une carte graphique pour afficher les détails d'un produit.
      *
-     * @param keyword Mot-clé pour filtrer les produits (nom ou catégorie).
-     * @return Liste de produits.
-     */
-    private List<Produit> fetchProducts(String keyword) {
-        List<Produit> produits = new ArrayList<>();
-        String sql = "SELECT * FROM produit WHERE nom LIKE ? OR category LIKE ?";
-
-        try (Connection conn = JdbcDataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, "%" + keyword + "%");
-            stmt.setString(2, "%" + keyword + "%");
-
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Produit produit = new Produit(
-                        rs.getInt("id"),
-                        rs.getString("nom"),
-                        rs.getString("description"),
-                        rs.getInt("quantite"),
-                        rs.getDouble("prix"),
-                        rs.getString("image"),
-                        rs.getString("category"),
-                        rs.getInt("marque_id")
-                );
-                produits.add(produit);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return produits;
-    }
-
-    /**
-     * Crée une carte (JPanel) pour afficher les détails d'un produit.
-     *
-     * @param produit Le produit à afficher dans la carte.
-     * @return Un JPanel représentant la carte produit.
+     * @param produit Le produit à afficher.
+     * @return Un JPanel pour le produit.
      */
     private JPanel createProductCard(Produit produit) {
         JPanel card = new JPanel();
         card.setLayout(new BorderLayout());
-        card.setBorder(new LineBorder(Color.GRAY));
-        card.setPreferredSize(new Dimension(200, 300)); // Taille fixe pour les cartes
+        card.setBorder(new LineBorder(new Color(220, 220, 220), 1, true));
+        card.setBackground(Color.WHITE);
+        card.setPreferredSize(new Dimension(200, 300));
 
-        // Image du produit
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon(produit.getImagePath());
-        Image scaledImage = imageIcon.getImage().getScaledInstance(180, 150, Image.SCALE_SMOOTH);
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-        card.add(imageLabel, BorderLayout.NORTH);
+        // Chargement et affichage de l'image du produit
+        String imagePath = produit.getImagePath(); // Chemin de l'image
+        JLabel productImage = new JLabel();
+        productImage.setHorizontalAlignment(SwingConstants.CENTER);
+        productImage.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Informations sur le produit
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        JLabel nameLabel = new JLabel(produit.getNomProduit());
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        JLabel priceLabel = new JLabel(String.format("%.2f €", produit.getPrix()));
-        JLabel descriptionLabel = new JLabel("<html>" + produit.getDescription() + "</html>");
-        descriptionLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        try {
+            ImageIcon productIcon = new ImageIcon(new ImageIcon(imagePath).getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH));
+            productImage.setIcon(productIcon); // Ajouter l'image redimensionnée
+        } catch (Exception e) {
+            productImage.setText("Image introuvable");
+        }
+        card.add(productImage, BorderLayout.CENTER);
 
-        infoPanel.add(nameLabel);
-        infoPanel.add(priceLabel);
-        infoPanel.add(descriptionLabel);
-        card.add(infoPanel, BorderLayout.CENTER);
+        // Ajouter les détails texte : nom du produit et prix
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
+        detailsPanel.setBackground(Color.WHITE);
+        detailsPanel.setBorder(new EmptyBorder(5, 10, 10, 10));
 
-        // Bouton pour ajouter au panier
+        JLabel productName = new JLabel(produit.getNomProduit());
+        productName.setFont(new Font("Arial", Font.BOLD, 14));
+        productName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        productName.setHorizontalAlignment(SwingConstants.CENTER);
+        detailsPanel.add(productName);
+
+        JLabel productPrice = new JLabel(String.format("Prix : %.2f €", produit.getPrix()));
+        productPrice.setFont(new Font("Arial", Font.PLAIN, 14));
+        productPrice.setForeground(new Color(0, 128, 0)); // Couleur verte pour le prix
+        productPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
+        productPrice.setHorizontalAlignment(SwingConstants.CENTER);
+        detailsPanel.add(productPrice);
+
+        // Ajouter un bouton d'achat
         JButton addToCartButton = new JButton("Ajouter au panier");
-        addToCartButton.addActionListener((ActionEvent e) -> {
-            handleAddToCart(produit);
-        });
-        card.add(addToCartButton, BorderLayout.SOUTH);
+        addToCartButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        addToCartButton.setBackground(new Color(0, 128, 255)); // Couleur bleue
+        addToCartButton.setForeground(Color.WHITE);
+        addToCartButton.setFocusPainted(false);
+        addToCartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        addToCartButton.addActionListener(e -> handleAddToCart(produit));
+        detailsPanel.add(addToCartButton);
+
+        card.add(detailsPanel, BorderLayout.SOUTH);
 
         return card;
     }
+
+    /**
+     * Récupère les produits depuis la base de données en fonction d'un mot-clé.
+     *
+     * @param keyword Mot-clé pour filtrer les produits (peut être vide pour tout afficher).
+     * @return Liste des produits récupérés.
+     */
+    /**
+     * Récupère les produits depuis la base de données en fonction d'un mot-clé.
+     *
+     * @param keyword Mot-clé pour filtrer les produits (peut être vide ou "tout" pour tout afficher).
+     * @return Liste des produits récupérés.
+     */
+    private List<Produit> fetchProducts(String keyword) {
+        List<Produit> produits = new ArrayList<>();
+
+        // Si le mot-clé est "tout", ou vide, on affiche tous les produits
+        boolean fetchAll = keyword == null || keyword.trim().isEmpty() || keyword.equalsIgnoreCase("tout");
+
+        String query = fetchAll
+                ? "SELECT * FROM produit" // Requête pour tous les produits
+                : "SELECT * FROM produit WHERE nom LIKE ? OR category LIKE ?"; // Requête avec filtre
+
+        try (Connection connection = JdbcDataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+
+            if (!fetchAll) {
+                // Ajouter les paramètres pour le filtre si nécessaire
+                ps.setString(1, "%" + keyword + "%");
+                ps.setString(2, "%" + keyword + "%");
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Produit produit = new Produit(
+                            rs.getInt("id"),
+                            rs.getString("nom"),
+                            rs.getString("description"),
+                            rs.getInt("quantite"),
+                            rs.getDouble("prix"),
+                            rs.getString("image"),
+                            rs.getString("category"),
+                            rs.getInt("marque_id")
+                    );
+                    produits.add(produit);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return produits;
+    }
+
 
     /**
      * Gère l'ajout d'un produit au panier.

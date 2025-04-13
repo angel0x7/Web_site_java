@@ -5,17 +5,20 @@ import Modele.Produit;
 import Modele.User;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VentesFlashPage extends JPanel {
 
     private final User currentUser;
+    private JPanel productsPanel;
 
     /**
      * Constructeur pour la page des ventes flash.
@@ -24,111 +27,139 @@ public class VentesFlashPage extends JPanel {
     public VentesFlashPage(User user) {
         this.currentUser = user;
 
-        // Configuration du layout principal
+        // Mettre en place la mise en page principale
         this.setLayout(new BorderLayout());
-        JLabel title = new JLabel("Ventes Flash : Produits en réduction", JLabel.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 18));
-        this.add(title, BorderLayout.NORTH);
+        this.setBackground(Color.WHITE);
 
-        // Récupérer les produits avec réduction
-        List<Produit> produitsAvecReduc = getProduitsAvecReduction();
+        // Ajouter un titre en haut de la page
+        JLabel titleLabel = new JLabel("Ventes Flash", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setBorder(new EmptyBorder(20, 0, 20, 0));
+        this.add(titleLabel, BorderLayout.NORTH);
 
-        // Affichage des produits dans un panneau en grille
-        JPanel produitsPanel = new JPanel();
-        produitsPanel.setLayout(new GridLayout(0, 3, 10, 10)); // 3 colonnes, espace entre les produits
-        produitsPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
+        // Panneau principal pour afficher les produits
+        productsPanel = new JPanel(new GridLayout(0, 4, 15, 15)); // Grille avec 4 colonnes
+        productsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        productsPanel.setBackground(Color.WHITE);
 
-        if (produitsAvecReduc.isEmpty()) {
-            // Aucun produit en réduction
-            JLabel noProductsLabel = new JLabel("Aucun produit en réduction pour le moment.");
-            noProductsLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            noProductsLabel.setFont(new Font("Arial", Font.ITALIC, 14));
-            produitsPanel.add(noProductsLabel);
-        } else {
-            // Affichage des produits avec réduction
-            for (Produit produit : produitsAvecReduc) {
-                produitsPanel.add(createProductCard(produit));
-            }
-        }
-
-        JScrollPane scrollPane = new JScrollPane(produitsPanel);
+        JScrollPane scrollPane = new JScrollPane(productsPanel); // Défilement
+        scrollPane.setBorder(null);
         this.add(scrollPane, BorderLayout.CENTER);
+
+        // Charger et afficher les produits en vente flash
+        loadAndDisplayProducts();
     }
 
     /**
-     * Méthode pour récupérer les produits ayant une réduction.
-     * @return Une liste des produits qui ont une entrée dans la table `reduction`.
+     * Charge et affiche les produits ayant une réduction.
      */
-    private List<Produit> getProduitsAvecReduction() {
-        List<Produit> produits = new ArrayList<>();
-        try (Connection conn = JdbcDataSource.getConnection()) {
-            String query = """
-                SELECT p.id, p.nom, p.description, p.prix, p.quantite, p.image, p.category, p.marque_id
-                FROM produit p
-                JOIN reduction r ON r.produit_id = p.id
-            """;
+    private void loadAndDisplayProducts() {
+        // Effacer les produits affichés précédemment
+        productsPanel.removeAll();
 
-            PreparedStatement statement = conn.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
+        // Récupérer les produits avec réduction depuis la base de données
+        List<Produit> produitsAvecReduction = getProduitsAvecReduction();
 
-            while (resultSet.next()) {
-                Produit produit = new Produit(
-                        resultSet.getInt("id"),
-                        resultSet.getString("nom"),
-                        resultSet.getString("description"),
-                        resultSet.getInt("quantite"),
-                        resultSet.getDouble("prix"),
-                        resultSet.getString("image"),
-                        resultSet.getString("category"),
-                        resultSet.getInt("marque_id")
-                );
-                produits.add(produit);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Erreur lors de la récupération des produits en réduction.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        // Ajouter chaque produit comme une carte
+        for (Produit produit : produitsAvecReduction) {
+            productsPanel.add(createProductCard(produit));
         }
-        return produits;
+
+        // Rafraîchir l'affichage
+        productsPanel.revalidate();
+        productsPanel.repaint();
     }
 
     /**
-     * Méthode pour créer une "carte produit" avec un bouton fonctionnel.
+     * Méthode pour créer une carte produit avec image, nom, prix et un bouton d'achat.
      * @param produit Le produit à afficher.
-     * @return JPanel contenant les informations du produit.
+     * @return JPanel représentant une carte produit.
      */
     private JPanel createProductCard(Produit produit) {
         JPanel card = new JPanel();
         card.setLayout(new BorderLayout());
-        card.setBorder(new LineBorder(Color.LIGHT_GRAY, 1, true));
+        card.setBorder(new LineBorder(new Color(220, 220, 220), 1, true));
+        card.setBackground(Color.WHITE);
         card.setPreferredSize(new Dimension(200, 300));
 
-        // Nom du produit
-        JLabel productName = new JLabel(produit.getNomProduit());
-        productName.setHorizontalAlignment(SwingConstants.CENTER);
-        productName.setFont(new Font("Arial", Font.BOLD, 14));
-        card.add(productName, BorderLayout.NORTH);
+        // Image du produit
+        String imagePath = produit.getImagePath();
+        JLabel productImage = new JLabel();
+        productImage.setHorizontalAlignment(SwingConstants.CENTER);
+        productImage.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Image simulée ou nom du produit
-        JLabel productImage = new JLabel(produit.getImage(), SwingConstants.CENTER);
-        productImage.setBorder(new LineBorder(Color.BLACK, 1, true));
-        productImage.setPreferredSize(new Dimension(200, 150));
+        try {
+            ImageIcon productIcon = new ImageIcon(new ImageIcon(imagePath).getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH));
+            productImage.setIcon(productIcon); // Ajouter l'image redimensionnée
+        } catch (Exception e) {
+            productImage.setText("Image introuvable");
+        }
         card.add(productImage, BorderLayout.CENTER);
 
-        // Prix avec possibilité de réduction
-        JPanel bottomPanel = new JPanel(new GridLayout(3, 1));
-        JLabel priceLabel = new JLabel(String.format("Prix : %.2f €", produit.getPrix()), JLabel.CENTER);
-        priceLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        bottomPanel.add(priceLabel);
+        // Section des détails : nom + prix + bouton
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
+        detailsPanel.setBackground(Color.WHITE);
+        detailsPanel.setBorder(new EmptyBorder(5, 10, 10, 10));
 
-        // Bouton pour ajouter au panier
+        JLabel productName = new JLabel(produit.getNomProduit());
+        productName.setFont(new Font("Arial", Font.BOLD, 14));
+        productName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        productName.setHorizontalAlignment(SwingConstants.CENTER);
+        detailsPanel.add(productName);
+
+        JLabel productPrice = new JLabel(String.format("Prix : %.2f €", produit.getPrix()));
+        productPrice.setFont(new Font("Arial", Font.PLAIN, 14));
+        productPrice.setForeground(new Color(255, 69, 0)); // Couleur rouge pour souligner la réduction
+        productPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
+        productPrice.setHorizontalAlignment(SwingConstants.CENTER);
+        detailsPanel.add(productPrice);
+
         JButton addToCartButton = new JButton("Ajouter au panier");
+        addToCartButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        addToCartButton.setBackground(new Color(0, 128, 255));
+        addToCartButton.setForeground(Color.WHITE);
+        addToCartButton.setFocusPainted(false);
+        addToCartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addToCartButton.addActionListener(e -> handleAddToCart(produit));
-        bottomPanel.add(addToCartButton);
+        detailsPanel.add(addToCartButton);
 
-        card.add(bottomPanel, BorderLayout.SOUTH);
+        card.add(detailsPanel, BorderLayout.SOUTH);
 
         return card;
     }
+
+    /**
+     * Méthode pour récupérer les produits ayant une réduction depuis la base de données.
+     * @return Une liste des produits avec une réduction.
+     */
+    private List<Produit> getProduitsAvecReduction() {
+        List<Produit> produits = new ArrayList<>();
+        String query = "SELECT produit.* FROM produit INNER JOIN reduction ON produit.id = reduction.produit_id";
+
+        try (Connection connection = JdbcDataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Produit produit = new Produit(
+                        rs.getInt("id"),
+                        rs.getString("nom"),
+                        rs.getString("description"),
+                        rs.getInt("quantite"),
+                        rs.getDouble("prix"),
+                        rs.getString("image"),
+                        rs.getString("category"),
+                        rs.getInt("marque_id")
+                );
+                produits.add(produit);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return produits;
+    }
+
 
     /**
      * Gère l'ajout d'un produit au panier.
