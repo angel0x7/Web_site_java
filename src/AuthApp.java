@@ -1,4 +1,4 @@
-import javax.swing.*;
+/*import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 import Modele.User;
@@ -113,7 +113,7 @@ public class AuthApp extends JFrame {
             /*if (password.length() < 6) {
                 JOptionPane.showMessageDialog(this, " Le mot de passe doit contenir au moins 6 caractères !");
                 return;
-            }*/
+            }
 
             // Vérifier si l'email est déjà utilisé
             if (emailExiste(email)) {
@@ -262,3 +262,4 @@ public class AuthApp extends JFrame {
 
     }
 }
+*/

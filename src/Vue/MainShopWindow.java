@@ -1,4 +1,4 @@
-import Vue.*;
+package Vue;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,10 +10,10 @@ public class MainShopWindow extends JFrame {
     private CardLayout cardLayout;
     private JButton btnAdmin;
     private JButton btnUser;
-    private PanierPage panierPage; // Référence explicite à PanierPage
+    private PanierPage panierPage;
 
     public MainShopWindow() {
-        this(null); // Appeler le constructeur principal sans utilisateur
+        this(null);
     }
 
     public MainShopWindow(User user) {
@@ -26,8 +26,8 @@ public class MainShopWindow extends JFrame {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        JPanel top = createTop(); // Barre supérieure avec le logo.
-        JPanel navBar = createNavBar(); // Barre de navigation.Categorie
+        JPanel top = createTop();
+        JPanel navBar = createNavBar();
 
         JPanel topContainer = new JPanel(new BorderLayout());
         topContainer.add(top, BorderLayout.NORTH);
@@ -36,20 +36,30 @@ public class MainShopWindow extends JFrame {
         add(topContainer, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
 
-        // Créer et ajouter les pages au CardLayout.
+        // Pages communes
         contentPanel.add(new HomePanel(), "home");
         contentPanel.add(new CategoriesPage(currentUser), "Catégories");
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
         contentPanel.add(new VentesPage(), "Vendre");
 
-        // Créer une instance de PanierPage et la stocker dans une variable membre.
+        // Panier
         panierPage = new PanierPage(currentUser);
         contentPanel.add(panierPage, "Panier");
 
+        // Ajout de AccountPage avec gestion du listener de succès
+        AccountPage accountPage = new AccountPage(currentUser);
+        accountPage.setLoginSuccessListener(userLoggedIn -> {
+            // Recrée complètement la fenêtre avec le nouvel utilisateur
+            this.dispose();
+            new MainShopWindow(userLoggedIn).setVisible(true);
+        });
+        contentPanel.add(accountPage, "Mon Compte");
+
+        // Autres pages conditionnelles
         contentPanel.add(new AdminPanel(), "Admin");
         contentPanel.add(new UserPanel(currentUser), "User");
 
-        showPage("home"); // Afficher la page d'accueil au démarrage.
+        showPage("home");
     }
 
     private JPanel createTop() {
@@ -66,14 +76,13 @@ public class MainShopWindow extends JFrame {
     }
 
     private JPanel createNavBar() {
-        JPanel navBar = new JPanel();
-        navBar.setLayout(new GridLayout(1, 7));
+        JPanel navBar = new JPanel(new GridLayout(1, 7));
         navBar.setBackground(new Color(30, 30, 30));
 
+        JButton MonCompte = createStyledButton("Mon Compte");
         JButton btnCategories = createStyledButton("Catégories");
         JButton btnVentesFlash = createStyledButton("Vente Flash");
         JButton btnVentes = createStyledButton("Vendre");
-        JButton btnAccount = createStyledButton("Mon Compte");
         JButton btnPanier = createStyledButton("Panier");
         btnAdmin = createStyledButton("Admin");
         btnUser = createStyledButton("User");
@@ -81,20 +90,19 @@ public class MainShopWindow extends JFrame {
         btnCategories.addActionListener(e -> showPage("Catégories"));
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         btnVentes.addActionListener(e -> showPage("Vendre"));
-        btnAccount.addActionListener(e -> showAccountOptions());
+        MonCompte.addActionListener(e -> showPage("Mon Compte"));
 
-        // Bouton Panier : Rafraîchir et afficher la page.
         btnPanier.addActionListener(e -> {
             if (panierPage != null) {
-                panierPage.refreshPage(); // Rafraîchir les données du panier
+                panierPage.refreshPage();
             }
-            showPage("Panier"); // Afficher la page du panier
+            showPage("Panier");
         });
 
         btnAdmin.addActionListener(e -> showPage("Admin"));
         btnUser.addActionListener(e -> showPage("User"));
 
-        // Mise à jour de la visibilité des boutons selon les droits de l'utilisateur.
+        // Gestion visibilité selon les rôles
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             btnAdmin.setVisible(false);
         }
@@ -106,7 +114,8 @@ public class MainShopWindow extends JFrame {
         navBar.add(btnCategories);
         navBar.add(btnVentesFlash);
         navBar.add(btnVentes);
-        navBar.add(btnAccount);
+        navBar.add(MonCompte);
+
         navBar.add(btnPanier);
         navBar.add(btnAdmin);
         navBar.add(btnUser);
@@ -126,10 +135,6 @@ public class MainShopWindow extends JFrame {
 
     private void showPage(String page) {
         cardLayout.show(contentPanel, page);
-    }
-
-    private void showAccountOptions() {
-        AccountOptionHandler.handle(this, currentUser);
     }
 
     public static void main(String[] args) {
