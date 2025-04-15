@@ -18,14 +18,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CategoriesPage extends JPanel {
+public class ListeProduitsPage extends JPanel{
 
     private User currentUser; // L'utilisateur connecté
     private JTextField searchField;
     private JButton searchButton;
     private JPanel productsPanel;
 
-    public CategoriesPage(User user) {
+    public ListeProduitsPage(User user) {
         this.currentUser = user;
 
         // Mise en page de la page principale
@@ -82,7 +82,7 @@ public class CategoriesPage extends JPanel {
         productsPanel.removeAll();
 
         // Récupérer les produits depuis la base de données
-        List<Produit> produits = fetchProducts(keyword);
+        java.util.List<Produit> produits = fetchProducts(keyword);
 
         // Ajouter chaque produit comme une carte
         for (Produit produit : produits) {
@@ -180,7 +180,7 @@ public class CategoriesPage extends JPanel {
      * @param keyword Mot-clé pour filtrer les produits (peut être vide ou "tout" pour tout afficher).
      * @return Liste des produits récupérés.
      */
-    private List<Produit> fetchProducts(String keyword) {
+    private java.util.List<Produit> fetchProducts(String keyword) {
         List<Produit> produits = new ArrayList<>();
 
         // Si le mot-clé est "tout", ou vide, on affiche tous les produits

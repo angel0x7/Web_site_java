@@ -112,7 +112,7 @@ public class VentesFlashPage extends JPanel {
 
         JLabel productPrice = new JLabel(String.format("Prix : %.2f €", produit.getPrix()));
         productPrice.setFont(new Font("Arial", Font.PLAIN, 14));
-        productPrice.setForeground(new Color(255, 69, 0)); // Couleur rouge pour souligner la réduction
+        productPrice.setForeground(new Color(0, 123, 167)); // Couleur rouge pour souligner la réduction
         productPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
         productPrice.setHorizontalAlignment(SwingConstants.CENTER);
         Reduction reduction = ProduitDAO.getReductionByProduitId(produit.getIdProduit());
@@ -123,7 +123,9 @@ public class VentesFlashPage extends JPanel {
                     String.format("Offre : %d pour %.2f €", reduction.getQuantite_vrac(), reduction.getPrix_vrac())
             );
             reductionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-            productPrice.setHorizontalAlignment(SwingConstants.CENTER);
+            reductionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            reductionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
             reductionLabel.setForeground(Color.RED);
             detailsPanel.add(reductionLabel);
         }

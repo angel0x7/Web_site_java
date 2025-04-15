@@ -80,17 +80,33 @@ public class MainShopWindow extends JFrame {
         navBar.setBackground(new Color(30, 30, 30));
 
         JButton MonCompte = createStyledButton("Mon Compte");
-        JButton btnCategories = createStyledButton("Catégories");
+        JButton btnTousProduits = createStyledButton("Tous produits");
+        JButton btnCategories = createStyledButton("Catégories ");
         JButton btnVentesFlash = createStyledButton("Vente Flash");
         JButton btnVentes = createStyledButton("Vendre");
         JButton btnPanier = createStyledButton("Panier");
         btnAdmin = createStyledButton("Admin");
         btnUser = createStyledButton("User");
 
-        btnCategories.addActionListener(e -> showPage("Catégories"));
+
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         btnVentes.addActionListener(e -> showPage("Vendre"));
         MonCompte.addActionListener(e -> showPage("Mon Compte"));
+        btnTousProduits.addActionListener(e -> showPage("Catégories"));
+        JPopupMenu categoriePopup = new JPopupMenu();
+        String[] categories = {"Électronique", "Vêtements", "Voitures", "Maison"};
+
+        for (String cat : categories) {
+            JMenuItem item = new JMenuItem(cat);
+            item.addActionListener(e -> {
+                System.out.println("Catégorie sélectionnée : " + cat);
+            });
+            categoriePopup.add(item);
+        }
+
+        btnCategories.addActionListener(e -> {
+            categoriePopup.show(btnCategories, 0, btnCategories.getHeight());
+        });
 
         btnPanier.addActionListener(e -> {
             if (panierPage != null) {
@@ -110,7 +126,7 @@ public class MainShopWindow extends JFrame {
         if (currentUser == null) {
             btnUser.setVisible(false);
         }
-
+        navBar.add(btnTousProduits);
         navBar.add(btnCategories);
         navBar.add(btnVentesFlash);
         navBar.add(btnVentes);
