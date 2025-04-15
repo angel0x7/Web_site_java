@@ -158,7 +158,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
                     "UPDATE produit SET nom='"+product.getNomProduit()+
                             "',prix="+product.getPrix()+",image='"+product.getImage()+
                             "',marque_id="+product.getIdMarque()+",quantite="+product.getQuantite()+
-                            ",descritpion='"+product.getDescription()+"',category='"+product.getCategorie()+
+                            ",description='"+product.getDescription()+"',category='"+product.getCategorie()+
                             "' WHERE id="+product.getIdProduit());
             preparedStatement.executeUpdate();
         }

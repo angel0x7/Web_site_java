@@ -1,7 +1,9 @@
 package Vue;
 
 import Dao.JdbcDataSource;
+import Dao.ProduitDAO;
 import Modele.Produit;
+import Modele.Reduction;
 import Modele.User;
 
 import javax.swing.*;
@@ -113,7 +115,18 @@ public class VentesFlashPage extends JPanel {
         productPrice.setForeground(new Color(255, 69, 0)); // Couleur rouge pour souligner la réduction
         productPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
         productPrice.setHorizontalAlignment(SwingConstants.CENTER);
+        Reduction reduction = ProduitDAO.getReductionByProduitId(produit.getIdProduit());
         detailsPanel.add(productPrice);
+
+        if (reduction != null) {
+            JLabel reductionLabel = new JLabel(
+                    String.format("Offre : %d pour %.2f €", reduction.getQuantite_vrac(), reduction.getPrix_vrac())
+            );
+            reductionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+            productPrice.setHorizontalAlignment(SwingConstants.CENTER);
+            reductionLabel.setForeground(Color.RED);
+            detailsPanel.add(reductionLabel);
+        }
 
         JButton addToCartButton = new JButton("Ajouter au panier");
         addToCartButton.setFont(new Font("Arial", Font.PLAIN, 12));

@@ -157,4 +157,23 @@ public class AdminMarqueDaoImpl implements AdminMarqueDao {
         }
 
     }
+    public int getIdByNom(String nomMarque) {
+        int idMarque = -1;
+        String sql = "SELECT id FROM marque WHERE nom = ?";
+
+        try (Connection conn = daoFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nomMarque);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    idMarque = rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return idMarque;
+    }
+
 }

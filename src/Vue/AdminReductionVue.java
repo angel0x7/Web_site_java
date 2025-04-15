@@ -8,12 +8,13 @@ import Modele.Reduction;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class AdminReductionVue extends JFrame {
+public class AdminReductionVue extends JPanel {
     private JTable table;
     private DefaultTableModel model;
     private AdminReductionDaoImpl reductionDao;
@@ -23,24 +24,36 @@ public class AdminReductionVue extends JFrame {
         this.reductionDao = reductionDao;
         this.produitDao = new AdminProduitDaoImpl(reductionDao.getDaoFactory());
 
-        setTitle("Gestion des Réductions");
-        setSize(900, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         String[] columnNames = {"ID", "Nom", "Produit", "Prix", "Quantité", "Actions"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model);
-        table.setRowHeight(70);
+        table.setRowHeight(40);
+        table.setFont(new Font("Arial", Font.PLAIN, 14));
+        table.setForeground(Color.BLACK);
+        table.setBackground(Color.WHITE);
+        table.setGridColor(Color.LIGHT_GRAY);
+        table.setSelectionBackground(new Color(180, 200, 255));
+        table.setSelectionForeground(Color.BLACK);
+
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(new Color(220, 220, 220));
+        header.setForeground(Color.BLACK);
+        header.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane scrollPane = new JScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        this.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel panelButtons = new JPanel();
+        JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelButtons.setBackground(Color.WHITE);
+
         JButton btnRefresh = new JButton("Recharger");
         JButton btnNouveau = new JButton("Nouvelle Réduction");
-
+        styleBoutonsPrincipaux(btnRefresh);
+        styleBoutonsPrincipaux(btnNouveau);
         panelButtons.add(btnRefresh);
         panelButtons.add(btnNouveau);
         add(panelButtons, BorderLayout.SOUTH);
@@ -60,16 +73,27 @@ public class AdminReductionVue extends JFrame {
         for (Reduction r : reductions) {
             Produit prod = produitDao.getById(r.getProduit_id());
             String nomProduit = (prod != null) ? prod.getNomProduit() : "Inconnu";
+            JPanel panelActions = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            panelActions.setBackground(Color.WHITE);
 
+            JButton btnModifier = new JButton("Modifier");
+            JButton btnSupprimer = new JButton("Supprimer");
+
+            styleBoutonsAction(btnModifier);
+            styleBoutonsAction(btnSupprimer);
+
+            panelActions.add(btnModifier);
+            panelActions.add(btnSupprimer);
             model.addRow(new Object[]{
                     r.getId(),
                     r.getNom(),
                     nomProduit,
                     r.getPrix_vrac(),
                     r.getQuantite_vrac(),
-                    "Actions"
+                    panelActions
             });
         }
+
 
         table.getColumn("Actions").setCellRenderer(new ButtonRenderer());
         table.getColumn("Actions").setCellEditor(new ButtonEditor(this, table));
@@ -93,7 +117,9 @@ public class AdminReductionVue extends JFrame {
     }
 
     private void ouvrirFenetreReduction(Reduction reduction) {
-        JFrame fenetreReduction = new JFrame(reduction == null ? "Ajouter une Réduction" : "Modifier une Réduction");
+        JDialog fenetreReduction = new JDialog(SwingUtilities.getWindowAncestor(this),
+                reduction == null ? "Ajouter une Réduction" : "Modifier une Réduction",
+                Dialog.ModalityType.APPLICATION_MODAL);
         fenetreReduction.setSize(400, 300);
         fenetreReduction.setLayout(new GridLayout(5, 2));
         fenetreReduction.setLocationRelativeTo(this);
@@ -168,14 +194,26 @@ public class AdminReductionVue extends JFrame {
             chargerReductions();
         }
     }
-
-    public static void main(String[] args) {
-        DaoFactory daoFactory = new DaoFactory("jdbc:mysql://localhost:3306/shopping", "root", "");
-        AdminReductionDaoImpl reductionDao = new AdminReductionDaoImpl(daoFactory);
-        SwingUtilities.invokeLater(() -> new AdminReductionVue(reductionDao));
+    private void styleBoutonsPrincipaux(JButton btn) {
+        btn.setFocusPainted(false);
+        btn.setBackground(new Color(100, 150, 255));
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Arial", Font.BOLD, 13));
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
+    private void styleBoutonsAction(JButton btn) {
+        btn.setFocusPainted(false);
+        btn.setBackground(new Color(180, 180, 180));
+        btn.setForeground(Color.BLACK);
+        btn.setFont(new Font("Arial", Font.PLAIN, 12));
+        btn.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+
+
+    static class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
         private JPanel panel;
         private JButton btnModifier;
         private JButton btnSupprimer;
@@ -190,6 +228,16 @@ public class AdminReductionVue extends JFrame {
             panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
             btnModifier = new JButton("Modifier");
             btnSupprimer = new JButton("Supprimer");
+            for (JButton btn : new JButton[]{btnModifier, btnSupprimer}) {
+                btn.setFocusPainted(false);
+                btn.setBackground(new Color(180, 180, 180));
+                btn.setForeground(Color.BLACK);
+                btn.setFont(new Font("Arial", Font.PLAIN, 12));
+                btn.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+                btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                btn.setPreferredSize(new Dimension(150, 60));
+
+            }
             panel.add(btnModifier);
             panel.add(btnSupprimer);
 
@@ -218,19 +266,19 @@ public class AdminReductionVue extends JFrame {
         }
     }
 
-    class ButtonRenderer extends JPanel implements TableCellRenderer {
-        private JButton btnModifier = new JButton("Modifier");
-        private JButton btnSupprimer = new JButton("Supprimer");
-
+    static class ButtonRenderer extends JPanel implements TableCellRenderer {
         public ButtonRenderer() {
             setLayout(new FlowLayout(FlowLayout.CENTER));
-            add(btnModifier);
-            add(btnSupprimer);
         }
 
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            if (value instanceof JPanel) {
+                return (JPanel) value;
+            }
             return this;
         }
     }
 }
+
