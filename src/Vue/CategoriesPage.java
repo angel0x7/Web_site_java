@@ -24,6 +24,7 @@ public class CategoriesPage extends JPanel {
     private JTextField searchField;
     private JButton searchButton;
     private JPanel productsPanel;
+    private String categorie;
 
     // === NOUVEAU : pour gérer le clic produit ===
     private ProductClickListener productClickListener;
@@ -36,8 +37,10 @@ public class CategoriesPage extends JPanel {
         this.productClickListener = listener;
     }
 
-    public CategoriesPage(User user) {
+    public CategoriesPage(User user,String categorie) {
         this.currentUser = user;
+        this.categorie = categorie;
+
 
         this.setLayout(new BorderLayout());
         this.setBackground(Color.WHITE);
@@ -53,7 +56,7 @@ public class CategoriesPage extends JPanel {
         scrollPane.setBorder(null);
         this.add(scrollPane, BorderLayout.CENTER);
 
-        loadAndDisplayProducts("");
+        loadAndDisplayProducts(categorie);
     }
 
     private JPanel createSearchPanel() {

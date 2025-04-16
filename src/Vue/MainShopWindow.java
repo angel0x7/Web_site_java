@@ -47,10 +47,11 @@ public class MainShopWindow extends JFrame {
         contentPanel.add(new HomePanel(), "home");
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
         contentPanel.add(new VentesPage(), "Vendre");
+        contentPanel.add(new ListeProduitsPage(currentUser), "Tous Produits");
 
         detailPanelContainer.setPreferredSize(new Dimension(1000, 400)); // Hauteur adaptée
 
-        CategoriesPage categoriesPage = new CategoriesPage(currentUser);
+        CategoriesPage categoriesPage = new CategoriesPage(currentUser,"");
         categoriesPage.setProductClickListener(produit -> {
             detailPanelContainer.removeAll();
             detailPanelContainer.add(new ProductDetailPanel(produit, currentUser, () -> {
@@ -113,14 +114,18 @@ public class MainShopWindow extends JFrame {
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         btnVentes.addActionListener(e -> showPage("Vendre"));
         MonCompte.addActionListener(e -> showPage("Mon Compte"));
-        btnTousProduits.addActionListener(e -> showPage("Catégories"));
+        btnTousProduits.addActionListener(e -> showPage("Tous Produits"));
         JPopupMenu categoriePopup = new JPopupMenu();
-        String[] categories = {"Électronique", "Vêtements", "Voitures", "Maison"};
+        String[] categories = {"Électronique", "Vêtement", "Vehicule", "Maison"};
 
         for (String cat : categories) {
             JMenuItem item = new JMenuItem(cat);
             item.addActionListener(e -> {
                 System.out.println("Catégorie sélectionnée : " + cat);
+                contentPanel.add(new CategoriesPage(currentUser,cat), "Catégories");
+                showPage("Catégories");
+
+
             });
             categoriePopup.add(item);
         }
