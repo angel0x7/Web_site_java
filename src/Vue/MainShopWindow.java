@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import Modele.User;
 
+
 public class MainShopWindow extends JFrame {
     private User currentUser;
     private JPanel contentPanel;
@@ -11,6 +12,8 @@ public class MainShopWindow extends JFrame {
     private JButton btnAdmin;
     private JButton btnUser;
     private PanierPage panierPage;
+    private JPanel detailPanelContainer;
+
 
     public MainShopWindow() {
         this(null);
@@ -36,11 +39,29 @@ public class MainShopWindow extends JFrame {
         add(topContainer, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
 
+        detailPanelContainer = new JPanel(new BorderLayout());
+        detailPanelContainer.setVisible(false); // caché par défaut
+        add(detailPanelContainer, BorderLayout.SOUTH);
+
         // Pages communes
         contentPanel.add(new HomePanel(), "home");
-        contentPanel.add(new CategoriesPage(currentUser), "Catégories");
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
         contentPanel.add(new VentesPage(), "Vendre");
+
+        detailPanelContainer.setPreferredSize(new Dimension(1000, 400)); // Hauteur adaptée
+
+        CategoriesPage categoriesPage = new CategoriesPage(currentUser);
+        categoriesPage.setProductClickListener(produit -> {
+            detailPanelContainer.removeAll();
+            detailPanelContainer.add(new ProductDetailPanel(produit, currentUser, () -> {
+                detailPanelContainer.setVisible(false);
+                detailPanelContainer.removeAll();
+            }));
+            detailPanelContainer.setVisible(true);
+            revalidate();
+            repaint();
+        });
+        contentPanel.add(categoriesPage, "Catégories");
 
         // Panier
         panierPage = new PanierPage(currentUser);
