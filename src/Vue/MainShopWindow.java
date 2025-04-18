@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import Modele.User;
 
-
 public class MainShopWindow extends JFrame {
     private User currentUser;
     private JPanel contentPanel;
@@ -13,7 +12,6 @@ public class MainShopWindow extends JFrame {
     private JButton btnUser;
     private PanierPage panierPage;
     private JPanel detailPanelContainer;
-
 
     public MainShopWindow() {
         this(null);
@@ -41,7 +39,9 @@ public class MainShopWindow extends JFrame {
 
         detailPanelContainer = new JPanel(new BorderLayout());
         detailPanelContainer.setVisible(false); // caché par défaut
+        detailPanelContainer.setPreferredSize(new Dimension(1000, 700)); // Hauteur adaptée
         add(detailPanelContainer, BorderLayout.SOUTH);
+
 
         // Pages communes
         contentPanel.add(new HomePanel(), "home");
@@ -49,35 +49,19 @@ public class MainShopWindow extends JFrame {
         contentPanel.add(new VentesPage(), "Vendre");
         contentPanel.add(new ListeProduitsPage(currentUser), "Tous Produits");
 
-        detailPanelContainer.setPreferredSize(new Dimension(1000, 400)); // Hauteur adaptée
-
-        CategoriesPage categoriesPage = new CategoriesPage(currentUser,"");
-        categoriesPage.setProductClickListener(produit -> {
-            detailPanelContainer.removeAll();
-            detailPanelContainer.add(new ProductDetailPanel(produit, currentUser, () -> {
-                detailPanelContainer.setVisible(false);
-                detailPanelContainer.removeAll();
-            }));
-            detailPanelContainer.setVisible(true);
-            revalidate();
-            repaint();
-        });
-        contentPanel.add(categoriesPage, "Catégories");
-
         // Panier
         panierPage = new PanierPage(currentUser);
         contentPanel.add(panierPage, "Panier");
 
-        // Ajout de AccountPage avec gestion du listener de succès
+        // Account page
         AccountPage accountPage = new AccountPage(currentUser);
         accountPage.setLoginSuccessListener(userLoggedIn -> {
-            // Recrée complètement la fenêtre avec le nouvel utilisateur
             this.dispose();
             new MainShopWindow(userLoggedIn).setVisible(true);
         });
         contentPanel.add(accountPage, "Mon Compte");
 
-        // Autres pages conditionnelles
+        // Admin & User pages
         contentPanel.add(new AdminPanel(), "Admin");
         contentPanel.add(new UserPanel(currentUser), "User");
 
@@ -110,23 +94,37 @@ public class MainShopWindow extends JFrame {
         btnAdmin = createStyledButton("Admin");
         btnUser = createStyledButton("User");
 
-
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         btnVentes.addActionListener(e -> showPage("Vendre"));
         MonCompte.addActionListener(e -> showPage("Mon Compte"));
         btnTousProduits.addActionListener(e -> showPage("Tous Produits"));
+
         JPopupMenu categoriePopup = new JPopupMenu();
         String[] categories = {"Électronique", "Vêtement", "Vehicule", "Maison"};
 
+        categoriePopup.setBackground(new Color(50, 50, 50));
+        categoriePopup.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
+
         for (String cat : categories) {
             JMenuItem item = new JMenuItem(cat);
-            item.addActionListener(e -> {
-                System.out.println("Catégorie sélectionnée : " + cat);
-                contentPanel.add(new CategoriesPage(currentUser,cat), "Catégories");
-                showPage("Catégories");
+            item.setFont(new Font("Arial", Font.PLAIN, 16));
+            item.setForeground(Color.WHITE);
+            item.setBackground(new Color(60, 60, 60));
+            item.setOpaque(true);
+            item.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 
+            item.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    item.setBackground(new Color(80, 80, 80));
+                }
 
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    item.setBackground(new Color(60, 60, 60));
+                }
             });
+
+            item.addActionListener(e -> afficherCategoriesPage(cat));
+
             categoriePopup.add(item);
         }
 
@@ -144,7 +142,6 @@ public class MainShopWindow extends JFrame {
         btnAdmin.addActionListener(e -> showPage("Admin"));
         btnUser.addActionListener(e -> showPage("User"));
 
-        // Gestion visibilité selon les rôles
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             btnAdmin.setVisible(false);
         }
@@ -152,12 +149,12 @@ public class MainShopWindow extends JFrame {
         if (currentUser == null) {
             btnUser.setVisible(false);
         }
+
         navBar.add(btnTousProduits);
         navBar.add(btnCategories);
         navBar.add(btnVentesFlash);
         navBar.add(btnVentes);
         navBar.add(MonCompte);
-
         navBar.add(btnPanier);
         navBar.add(btnAdmin);
         navBar.add(btnUser);
@@ -177,6 +174,26 @@ public class MainShopWindow extends JFrame {
 
     private void showPage(String page) {
         cardLayout.show(contentPanel, page);
+    }
+
+    /**
+     * Méthode qui affiche une CategoriesPage avec gestion du clic produit
+     */
+    private void afficherCategoriesPage(String categorie) {
+        CategoriesPage page = new CategoriesPage(currentUser, categorie);
+        page.setProductClickListener(produit -> {
+            detailPanelContainer.removeAll();
+            detailPanelContainer.add(new ProductDetailPanel(produit, currentUser, () -> {
+                detailPanelContainer.setVisible(false);
+                detailPanelContainer.removeAll();
+            }));
+            detailPanelContainer.setVisible(true);
+            revalidate();
+            repaint();
+        });
+
+        contentPanel.add(page, "Catégories");
+        showPage("Catégories");
     }
 
     public static void main(String[] args) {

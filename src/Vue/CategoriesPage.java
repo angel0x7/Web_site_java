@@ -210,18 +210,21 @@ public class CategoriesPage extends JPanel {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            if(currentUser.getRole()=="CLIENT"){
+                Connection connection = JdbcDataSource.getConnection();
+                PanierDAO panierDAO = new PanierDAO(connection);
 
-            Connection connection = JdbcDataSource.getConnection();
-            PanierDAO panierDAO = new PanierDAO(connection);
+                int panierId = panierDAO.getOrCreatePanier(currentUser.getId());
+                panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), 1);
+                panierDAO.updatePanierTaille(panierId);
 
-            int panierId = panierDAO.getOrCreatePanier(currentUser.getId());
-            panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), 1);
-            panierDAO.updatePanierTaille(panierId);
+                JOptionPane.showMessageDialog(this,
+                        "Article ajouté : " + produit.getNomProduit(),
+                        "Confirmation",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
 
-            JOptionPane.showMessageDialog(this,
-                    "Article ajouté : " + produit.getNomProduit(),
-                    "Confirmation",
-                    JOptionPane.INFORMATION_MESSAGE);
+
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
