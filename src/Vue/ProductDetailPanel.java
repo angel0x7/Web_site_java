@@ -2,28 +2,25 @@ package Vue;
 
 import Modele.Produit;
 import Modele.User;
-import Dao.JdbcDataSource;
-import Dao.PanierDAO;
+import Controleur.ProductDetailController;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
 public class ProductDetailPanel extends JPanel {
 
+    private final JComboBox<Integer> quantityCombo = new JComboBox<>();
+    private final JButton addButton = createStyledButton("Ajouter au panier", new Color(0, 153, 76));
+    private final JButton closeButton = createStyledButton("Fermer", new Color(200, 50, 50));
+
     public ProductDetailPanel(Produit produit, User user, Runnable onClose) {
         setLayout(new BorderLayout(20, 20));
-        setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100), 4, true));
         setBackground(Color.WHITE);
 
-        // Bordure du panel global
-        setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100), 4, true));
-
-        // Image produit
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         try {
@@ -33,24 +30,20 @@ public class ProductDetailPanel extends JPanel {
             imageLabel.setText("Image indisponible");
         }
 
-        // Panel à droite
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setBackground(Color.WHITE);
 
-        // Nom
         JLabel nameLabel = new JLabel(produit.getNomProduit());
         nameLabel.setFont(new Font("Arial", Font.BOLD, 26));
         nameLabel.setForeground(new Color(30, 30, 30));
         nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Prix
         JLabel priceLabel = new JLabel("Prix : " + produit.getPrix() + " €");
         priceLabel.setFont(new Font("Arial", Font.PLAIN, 20));
         priceLabel.setForeground(new Color(0, 123, 255));
         priceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Description
         JTextArea descArea = new JTextArea(produit.getDescription());
         descArea.setFont(new Font("Arial", Font.PLAIN, 15));
         descArea.setLineWrap(true);
@@ -60,44 +53,16 @@ public class ProductDetailPanel extends JPanel {
         descArea.setBorder(new TitledBorder("Description"));
         descArea.setMaximumSize(new Dimension(500, 120));
 
-        // Quantité
         JLabel quantityLabel = new JLabel("Quantité :");
         quantityLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         quantityLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JComboBox<Integer> quantityCombo = new JComboBox<>();
         for (int i = 1; i <= 10; i++) quantityCombo.addItem(i);
         quantityCombo.setMaximumSize(new Dimension(100, 30));
         quantityCombo.setAlignmentX(Component.CENTER_ALIGNMENT);
         quantityCombo.setBackground(Color.WHITE);
         quantityCombo.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // Boutons
-        JButton addButton = createStyledButton("Ajouter au panier", new Color(0, 153, 76));
-        JButton closeButton = createStyledButton("Fermer", new Color(200, 50, 50));
-
-        addButton.addActionListener(e -> {
-            int selectedQuantity = (Integer) quantityCombo.getSelectedItem();
-            try (Connection connection = JdbcDataSource.getConnection()) {
-                if (user == null) {
-                    JOptionPane.showMessageDialog(this, "Veuillez vous connecter.", "Non connecté", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                PanierDAO panierDAO = new PanierDAO(connection);
-                int panierId = panierDAO.getOrCreatePanier(user.getId());
-                panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), selectedQuantity);
-                panierDAO.updatePanierTaille(panierId);
-
-                JOptionPane.showMessageDialog(this, selectedQuantity + " x " + produit.getNomProduit() + " ajouté(s) au panier !");
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout au panier", "Erreur", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        closeButton.addActionListener(e -> onClose.run());
-
-        // Section avis (exemple statique)
         JPanel avisPanel = new JPanel();
         avisPanel.setLayout(new BoxLayout(avisPanel, BoxLayout.Y_AXIS));
         avisPanel.setBackground(new Color(245, 245, 245));
@@ -116,7 +81,6 @@ public class ProductDetailPanel extends JPanel {
             avisPanel.add(avisLabel);
         }
 
-        // Ajout au panel droit
         rightPanel.add(nameLabel);
         rightPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         rightPanel.add(priceLabel);
@@ -132,9 +96,17 @@ public class ProductDetailPanel extends JPanel {
         rightPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         rightPanel.add(closeButton);
 
-        // Ajout à la vue principale
         add(imageLabel, BorderLayout.WEST);
         add(rightPanel, BorderLayout.CENTER);
+
+        // Ajout des contrôleurs
+        ProductDetailController controller = new ProductDetailController(produit, user, this, onClose);
+        addButton.addActionListener(controller.getAddToCartListener());
+        closeButton.addActionListener(e -> onClose.run());
+    }
+
+    public int getSelectedQuantity() {
+        return (Integer) quantityCombo.getSelectedItem();
     }
 
     private JButton createStyledButton(String text, Color backgroundColor) {
