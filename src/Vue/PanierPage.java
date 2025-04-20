@@ -27,28 +27,51 @@ public class PanierPage extends JPanel {
         this.controller = new PanierController(this, user);
 
         setLayout(new BorderLayout());
-        setBorder(new EmptyBorder(10, 10, 10, 10));
+        setBackground(new Color(245, 245, 245));
+        setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        JLabel title = new JLabel("🛒 Votre panier", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel title = new JLabel("Votre panier", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(new Color(33, 37, 41));
+        title.setBorder(new EmptyBorder(10, 0, 20, 0));
         add(title, BorderLayout.NORTH);
 
         produitsPanel = new JPanel();
         produitsPanel.setLayout(new BoxLayout(produitsPanel, BoxLayout.Y_AXIS));
+        produitsPanel.setBackground(Color.WHITE);
+        produitsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
         JScrollPane scrollPane = new JScrollPane(produitsPanel);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 
         JPanel footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
+        footerPanel.setBackground(new Color(245, 245, 245));
+
         totalLabel = new JLabel("Total : 0€", SwingConstants.RIGHT);
-        totalLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        totalLabel.setForeground(new Color(0, 102, 51));
+        totalLabel.setBorder(new EmptyBorder(5, 0, 10, 10));
         footerPanel.add(totalLabel, BorderLayout.NORTH);
 
         JButton commanderButton = new JButton("Commander");
+        commanderButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         commanderButton.setBackground(new Color(0, 123, 255));
         commanderButton.setForeground(Color.WHITE);
-        commanderButton.addActionListener(e -> controller.passerCommande());
-        footerPanel.add(commanderButton, BorderLayout.SOUTH);
+        commanderButton.setFocusPainted(false);
+        commanderButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        commanderButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        commanderButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
+        commanderButton.addActionListener(e -> controller.passerCommande());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(new Color(245, 245, 245));
+        buttonPanel.add(commanderButton);
+
+        footerPanel.add(buttonPanel, BorderLayout.SOUTH);
         add(footerPanel, BorderLayout.SOUTH);
 
         if (currentUser != null) {

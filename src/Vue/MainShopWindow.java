@@ -44,9 +44,7 @@ public class MainShopWindow extends JFrame {
 
 
         // Pages communes
-        contentPanel.add(new HomePanel(), "home");
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
-        contentPanel.add(new VentesPage(), "Vendre");
         contentPanel.add(new ListeProduitsPage(currentUser), "Tous Produits");
 
         // Panier
@@ -92,7 +90,7 @@ public class MainShopWindow extends JFrame {
         JButton btnVentes = createStyledButton("Vendre");
         JButton btnPanier = createStyledButton("Panier");
         btnAdmin = createStyledButton("Admin");
-        btnUser = createStyledButton("User");
+        btnUser = createStyledButton("Mon Espace");
 
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         btnVentes.addActionListener(e -> showPage("Vendre"));
