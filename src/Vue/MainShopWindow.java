@@ -87,18 +87,16 @@ public class MainShopWindow extends JFrame {
         JButton btnTousProduits = createStyledButton("Tous produits");
         JButton btnCategories = createStyledButton("Catégories ");
         JButton btnVentesFlash = createStyledButton("Vente Flash");
-        JButton btnVentes = createStyledButton("Vendre");
         JButton btnPanier = createStyledButton("Panier");
         btnAdmin = createStyledButton("Admin");
         btnUser = createStyledButton("Mon Espace");
 
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
-        btnVentes.addActionListener(e -> showPage("Vendre"));
         MonCompte.addActionListener(e -> showPage("Mon Compte"));
         btnTousProduits.addActionListener(e -> showPage("Tous Produits"));
 
         JPopupMenu categoriePopup = new JPopupMenu();
-        String[] categories = {"Électronique", "Vêtement", "Vehicule", "Maison"};
+        String[] categories = {"Téléphones", "Consoles", "Accessoires", "Ordinateurs","Autres"};
 
         categoriePopup.setBackground(new Color(50, 50, 50));
         categoriePopup.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
@@ -151,7 +149,6 @@ public class MainShopWindow extends JFrame {
         navBar.add(btnTousProduits);
         navBar.add(btnCategories);
         navBar.add(btnVentesFlash);
-        navBar.add(btnVentes);
         navBar.add(MonCompte);
         navBar.add(btnPanier);
         navBar.add(btnAdmin);

@@ -85,12 +85,14 @@ public class CategoriesPage extends JPanel {
         JLabel productImage = new JLabel();
         productImage.setHorizontalAlignment(SwingConstants.CENTER);
         productImage.setBorder(new EmptyBorder(10, 10, 10, 10));
+
         try {
             ImageIcon productIcon = new ImageIcon(new ImageIcon(produit.getImagePath()).getImage().getScaledInstance(180, 180, Image.SCALE_SMOOTH));
             productImage.setIcon(productIcon);
         } catch (Exception e) {
             productImage.setText("Image introuvable");
         }
+
         card.add(productImage, BorderLayout.CENTER);
 
         JPanel detailsPanel = new JPanel();
@@ -99,23 +101,41 @@ public class CategoriesPage extends JPanel {
         detailsPanel.setBorder(new EmptyBorder(5, 10, 10, 10));
 
         JLabel productName = new JLabel(produit.getNomProduit());
-        JLabel productPrice = new JLabel(String.format("Prix : %.2f €", produit.getPrix()));
+        productName.setFont(new Font("Arial", Font.BOLD, 14));
+        productName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        productName.setHorizontalAlignment(SwingConstants.CENTER);
         detailsPanel.add(productName);
+
+        JLabel productPrice = new JLabel(String.format("Prix : %.2f €", produit.getPrix()));
+        productPrice.setFont(new Font("Arial", Font.PLAIN, 14));
+        productPrice.setForeground(new Color(0, 123, 167));
+        productPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
+        productPrice.setHorizontalAlignment(SwingConstants.CENTER);
         detailsPanel.add(productPrice);
 
         Reduction reduction = controller.getReduction(produit.getIdProduit());
         if (reduction != null) {
-            JLabel reductionLabel = new JLabel(String.format("Offre : %d pour %.2f €", reduction.getQuantite_vrac(), reduction.getPrix_vrac()));
+            JLabel reductionLabel = new JLabel(
+                    String.format("Offre : %d pour %.2f €", reduction.getQuantite_vrac(), reduction.getPrix_vrac())
+            );
+            reductionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+            reductionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            reductionLabel.setHorizontalAlignment(SwingConstants.CENTER);
             reductionLabel.setForeground(Color.RED);
             detailsPanel.add(reductionLabel);
         }
 
         JButton addToCartButton = new JButton("Ajouter au panier");
-        addToCartButton.addActionListener(e -> controller.handleAddToCart(this, produit));
+        addToCartButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        addToCartButton.setBackground(new Color(0, 128, 255));
+        addToCartButton.setForeground(Color.WHITE);
+        addToCartButton.setFocusPainted(false);
+        addToCartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        addToCartButton.addActionListener(e -> controller.handleAddToCart(this,produit));
         detailsPanel.add(addToCartButton);
 
         card.add(detailsPanel, BorderLayout.SOUTH);
-
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         card.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -124,7 +144,6 @@ public class CategoriesPage extends JPanel {
                 }
             }
         });
-
         return card;
     }
 }

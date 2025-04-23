@@ -18,6 +18,15 @@ public class ListeProduitsPage extends JPanel {
     private JButton searchButton;
     private JPanel productsPanel;
     private ListeProduitsController controller;
+    private ListeProduitsPage.ProductClickListener productClickListener;
+
+    public interface ProductClickListener {
+        void onProductClick(Produit produit);
+    }
+
+    public void setProductClickListener(ListeProduitsPage.ProductClickListener listener) {
+        this.productClickListener = listener;
+    }
 
     public ListeProduitsPage(User user) {
         this.currentUser = user;
@@ -130,7 +139,14 @@ public class ListeProduitsPage extends JPanel {
         detailsPanel.add(addToCartButton);
 
         card.add(detailsPanel, BorderLayout.SOUTH);
-
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (productClickListener != null) {
+                    productClickListener.onProductClick(produit);
+                }
+            }
+        });
         return card;
     }
 }
