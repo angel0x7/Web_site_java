@@ -45,6 +45,7 @@ public class MainShopWindow extends JFrame {
 
         // Pages communes
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
+        
         contentPanel.add(new ListeProduitsPage(currentUser), "Tous Produits");
 
         // Panier
@@ -89,10 +90,23 @@ public class MainShopWindow extends JFrame {
         JButton btnVentesFlash = createStyledButton("Vente Flash");
         JButton btnPanier = createStyledButton("Panier");
         btnAdmin = createStyledButton("Admin");
-        btnUser = createStyledButton("Mon Espace");
+        btnUser = createStyledButton("User");
 
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
-        MonCompte.addActionListener(e -> showPage("Mon Compte"));
+        MonCompte.addActionListener(e -> {
+            showPage("Mon Compte");
+
+            // Récupère le composant AccountPage et le cast
+            for (Component comp : contentPanel.getComponents()) {
+                if (comp instanceof AccountPage accountPage) {
+                    if (currentUser == null) {
+                        // Force l'affichage de la page d'accueil (avec les boutons Se connecter / Créer un compte)
+                        accountPage.showHomeScreen();
+                    }
+                }
+            }
+        });
+
         btnTousProduits.addActionListener(e -> showPage("Tous Produits"));
 
         JPopupMenu categoriePopup = new JPopupMenu();

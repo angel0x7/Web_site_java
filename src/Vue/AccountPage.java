@@ -232,4 +232,9 @@ public class AccountPage extends JPanel {
             return false;
         }
     }
+    public void showHomeScreen() {
+        if (currentUser == null) {
+            cardLayout.show(mainPanel, "home");
+        }
+    }
 }
