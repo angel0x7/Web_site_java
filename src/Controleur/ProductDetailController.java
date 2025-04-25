@@ -28,15 +28,25 @@ public class ProductDetailController {
         return e -> {
             int selectedQuantity = view.getSelectedQuantity();
             try (Connection connection = JdbcDataSource.getConnection()) {
+                // Vérifier si l'utilisateur est connecté
                 if (user == null) {
                     JOptionPane.showMessageDialog(view, "Veuillez vous connecter.", "Non connecté", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+
+                // Vérifier si l'utilisateur est un administrateur
+                if (user.getRole().equals("ADMIN")) {
+                    JOptionPane.showMessageDialog(view, "Les administrateurs ne peuvent pas ajouter de produits au panier.", "Accès refusé", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                // Ajouter l'élément au panier
                 PanierDAO panierDAO = new PanierDAO(connection);
                 int panierId = panierDAO.getOrCreatePanier(user.getId());
                 panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), selectedQuantity);
                 panierDAO.updatePanierTaille(panierId);
 
+                // Message de succès
                 JOptionPane.showMessageDialog(view, selectedQuantity + " x " + produit.getNomProduit() + " ajouté(s) au panier !");
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -44,4 +54,5 @@ public class ProductDetailController {
             }
         };
     }
+
 }

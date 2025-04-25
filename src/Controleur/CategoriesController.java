@@ -69,6 +69,12 @@ public class CategoriesController {
                 JOptionPane.showMessageDialog(parent, "Veuillez vous connecter pour ajouter un article au panier.", "Utilisateur non connecté", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+
+            if ("ADMIN".equals(currentUser.getRole())) {
+                JOptionPane.showMessageDialog(parent, "Les administrateurs ne peuvent pas ajouter d'articles au panier.", "Action non autorisée", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             if ("CLIENT".equals(currentUser.getRole())) {
                 Connection connection = JdbcDataSource.getConnection();
                 PanierDAO panierDAO = new PanierDAO(connection);

@@ -45,6 +45,15 @@ public class ListeProduitsController {
                 return;
             }
 
+            // Vérification si l'utilisateur est un administrateur
+            if (currentUser.getRole().equals("ADMIN")) {
+                JOptionPane.showMessageDialog(vue,
+                        "Les administrateurs ne peuvent pas ajouter d'articles au panier.",
+                        "Action non autorisée",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             Connection connection = JdbcDataSource.getConnection();
             PanierDAO panierDAO = new PanierDAO(connection);
 
@@ -66,6 +75,7 @@ public class ListeProduitsController {
             JdbcDataSource.closeConnection();
         }
     }
+
 
     private List<Produit> fetchProducts(String keyword) {
         List<Produit> produits = new ArrayList<>();

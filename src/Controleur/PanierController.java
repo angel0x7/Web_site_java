@@ -564,5 +564,4 @@ public class PanierController {
         frame.setContentPane(confirmPanel);
         frame.setVisible(true);
     }
-
 }
