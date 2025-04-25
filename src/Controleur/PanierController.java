@@ -415,7 +415,7 @@ public class PanierController {
         formulaire.add(champCode);
 
         formulaire.add(new JLabel("Montant total à payer :"));
-        JLabel montantTotal = new JLabel("842 €");
+        JLabel montantTotal = new JLabel(String.format("%.2f €", calculerTotal()));
         montantTotal.setFont(new Font("SansSerif", Font.BOLD, 14));
         formulaire.add(montantTotal);
 
@@ -456,7 +456,6 @@ public class PanierController {
 
             @Override
             public Class<?> getColumnClass(int column) {
-                // Indiquer que la première colonne contient des icônes
                 if (column == 0) {
                     return ImageIcon.class;
                 }
@@ -467,8 +466,20 @@ public class PanierController {
         for (int i = 0; i < produitsPanier.size(); i++) {
             Produit p = produitsPanier.get(i);
             int q = quantitesPanier.get(i);
-            double pu = p.getPrix();
-            double st = pu * q;
+            double prixUnitaire;
+            double sousTotal;
+
+            Reduction reduction = ProduitDAO.getReductionByProduitId(p.getIdProduit());
+
+            if (reduction != null && q >= reduction.getQuantite_vrac()) {
+                int lotCount = q / reduction.getQuantite_vrac();
+                int reste = q % reduction.getQuantite_vrac();
+                sousTotal = lotCount * reduction.getPrix_vrac() + reste * p.getPrix();
+                prixUnitaire = sousTotal / q;
+            } else {
+                sousTotal = q * p.getPrix();
+                prixUnitaire = p.getPrix();
+            }
 
             // Charger et redimensionner l'image du produit
             ImageIcon productIcon = null;
@@ -478,25 +489,24 @@ public class PanierController {
                                 .getScaledInstance(80, 80, Image.SCALE_SMOOTH)
                 );
             } catch (Exception e) {
-                productIcon = new ImageIcon(); // Si l'image est introuvable, on utilise une image vide
+                productIcon = new ImageIcon(); // Image vide si erreur
             }
 
             model.addRow(new Object[]{
                     productIcon,
                     p.getNomProduit(),
                     q,
-                    String.format("%.2f €", pu),
-                    String.format("%.2f €", st)
+                    String.format("%.2f €", prixUnitaire),
+                    String.format("%.2f €", sousTotal)
             });
         }
 
         JTable table = new JTable(model);
-        table.setRowHeight(80);  // Ajuster la hauteur des lignes pour afficher l'image correctement
-        table.getColumnModel().getColumn(0).setMaxWidth(100); // Limiter la taille de la colonne des images
+        table.setRowHeight(80);
+        table.getColumnModel().getColumn(0).setMaxWidth(100);
         table.getTableHeader().setReorderingAllowed(false);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        // Ajouter un renderer pour la colonne des images
         table.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table,
@@ -510,7 +520,7 @@ public class PanierController {
                 );
                 if (value instanceof ImageIcon) {
                     label.setIcon((ImageIcon) value);
-                    label.setText(""); // Pas de texte, juste l'icône
+                    label.setText("");
                 }
                 return label;
             }
@@ -537,7 +547,6 @@ public class PanierController {
         fermerBtn.setForeground(Color.WHITE);
         fermerBtn.setFocusPainted(false);
         fermerBtn.addActionListener(e -> {
-            // Ferme la fenêtre
             SwingUtilities.getWindowAncestor(fermerBtn).dispose();
         });
         JPanel btnPanel = new JPanel();
@@ -550,11 +559,10 @@ public class PanierController {
         // Création et affichage de la fenêtre
         JFrame frame = new JFrame("Confirmation de la commande");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setSize(900, 600);            // Format paysage plus grand
-        frame.setLocationRelativeTo(null);  // Centré à l'écran
+        frame.setSize(900, 600);
+        frame.setLocationRelativeTo(null);
         frame.setContentPane(confirmPanel);
         frame.setVisible(true);
     }
-
 
 }
