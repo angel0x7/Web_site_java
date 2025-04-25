@@ -50,7 +50,7 @@ public class PanierPage extends JPanel {
         footerPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
         footerPanel.setBackground(new Color(245, 245, 245));
 
-        totalLabel = new JLabel("Total : 0€", SwingConstants.RIGHT);
+        totalLabel = new JLabel("Total : 0.0€", SwingConstants.RIGHT);
         totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         totalLabel.setForeground(new Color(0, 102, 51));
         totalLabel.setBorder(new EmptyBorder(5, 0, 10, 10));

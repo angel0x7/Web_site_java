@@ -245,12 +245,17 @@ public class PanierController {
             }
 
             connection.commit();
+            String deleteOldPanierQuery = "DELETE FROM element_panier WHERE panier_id = ?";
+            try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanierQuery)) {
+                deleteStmt.setInt(1, currentUser.getPanierId());
+                deleteStmt.executeUpdate();
+            }
 
             // Réinitialisation de l'affichage
             produitsPanier.clear();
             quantitesPanier.clear();
             vue.getProduitsPanel().removeAll();
-            vue.getTotalLabel().setText("Total : 0€");
+            vue.getTotalLabel().setText("Total : 0.0€");
             vue.getProduitsPanel().repaint();
 
             JOptionPane.showMessageDialog(vue, "Commande passée avec succès avec un nouvel ID !", "Succès", JOptionPane.INFORMATION_MESSAGE);
