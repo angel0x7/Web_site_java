@@ -9,9 +9,14 @@ import Vue.PanierPage;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class PanierController {
     private PanierPage vue;
@@ -26,7 +31,6 @@ public class PanierController {
         this.quantitesPanier = vue.getQuantitesPanier();
     }
 
-    // Récupère les produits dans la base de données liés au panier de l'utilisateur
     public void chargerProduitsDuPanier() {
         produitsPanier.clear();
         quantitesPanier.clear();
@@ -61,7 +65,6 @@ public class PanierController {
         }
     }
 
-    // Affiche dynamiquement les produits dans le JPanel
     private void afficherProduits() {
         JPanel produitsPanel = vue.getProduitsPanel();
         produitsPanel.removeAll();
@@ -71,7 +74,6 @@ public class PanierController {
             int quantite = quantitesPanier.get(i);
             int finalI = i;
 
-            // Panel contenant l'affichage d'un produit
             JPanel produitPanel = new JPanel(new BorderLayout());
             produitPanel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createEmptyBorder(10, 10, 10, 10),
@@ -97,7 +99,6 @@ public class PanierController {
             infoPanel.add(Box.createVerticalStrut(4));
             infoPanel.add(priceLabel);
 
-            // Affichage d'une éventuelle réduction
             Reduction reduction = ProduitDAO.getReductionByProduitId(produit.getIdProduit());
             if (reduction != null) {
                 JLabel reductionLabel = new JLabel(String.format("Offre : %d pour %.2f €",
@@ -110,21 +111,20 @@ public class PanierController {
 
             produitPanel.add(infoPanel, BorderLayout.WEST);
 
-            // Partie centrale : gestion des quantités
             JPanel quantitePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
             quantitePanel.setBackground(Color.WHITE);
 
             JButton decrementButton = new JButton("-");
             decrementButton.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            decrementButton.setBackground(new Color(83, 83, 83)); // rouge doux
+            decrementButton.setBackground(new Color(83, 83, 83));
             decrementButton.setForeground(Color.WHITE);
             decrementButton.setFocusPainted(false);
             decrementButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
             decrementButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            decrementButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
             decrementButton.addActionListener(e -> {
                 if (quantitesPanier.get(finalI) > 1) {
                     quantitesPanier.set(finalI, quantitesPanier.get(finalI) - 1);
+                    modifierQuantiteDansDB(produitsPanier.get(finalI).getIdProduit(), quantitesPanier.get(finalI));
                     afficherProduits();
                 }
             });
@@ -132,14 +132,14 @@ public class PanierController {
             JLabel quantiteLabel = new JLabel("Quantité : " + quantite);
             JButton incrementButton = new JButton("+");
             incrementButton.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            incrementButton.setBackground(new Color(83, 83, 83)); // rouge doux
+            incrementButton.setBackground(new Color(83, 83, 83));
             incrementButton.setForeground(Color.WHITE);
             incrementButton.setFocusPainted(false);
             incrementButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
             incrementButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            incrementButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
             incrementButton.addActionListener(e -> {
                 quantitesPanier.set(finalI, quantitesPanier.get(finalI) + 1);
+                modifierQuantiteDansDB(produitsPanier.get(finalI).getIdProduit(), quantitesPanier.get(finalI));
                 afficherProduits();
             });
 
@@ -148,7 +148,6 @@ public class PanierController {
             quantitePanel.add(incrementButton);
             produitPanel.add(quantitePanel, BorderLayout.CENTER);
 
-            // Partie droite : bouton de suppression
             JPanel actionPanel = new JPanel();
             actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.Y_AXIS));
             actionPanel.setBackground(Color.WHITE);
@@ -156,14 +155,11 @@ public class PanierController {
 
             JButton removeButton = new JButton("Supprimer");
             removeButton.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            removeButton.setBackground(new Color(83, 83, 83)); // rouge doux
+            removeButton.setBackground(new Color(83, 83, 83));
             removeButton.setForeground(Color.WHITE);
             removeButton.setFocusPainted(false);
             removeButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
             removeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            removeButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
-            removeButton.setToolTipText("Retirer ce produit du panier");
-
             removeButton.addActionListener(e -> {
                 if (supprimerProduitDansDB(produit.getIdProduit())) {
                     produitsPanier.remove(finalI);
@@ -176,7 +172,6 @@ public class PanierController {
             actionPanel.add(removeButton);
             produitPanel.add(actionPanel, BorderLayout.EAST);
 
-            // Calcul du prix total du produit, avec ou sans réduction
             double prixTotalParProduit;
             if (reduction != null && quantite >= reduction.getQuantite_vrac()) {
                 int lotCount = quantite / reduction.getQuantite_vrac();
@@ -199,78 +194,87 @@ public class PanierController {
         vue.getTotalLabel().setText("Total : " + calculerTotal() + "€");
     }
 
-    // Passe une commande : crée un nouveau panier dans la base
+    private void modifierQuantiteDansDB(int produitId, int nouvelleQuantite) {
+        try (Connection connection = JdbcDataSource.getConnection()) {
+            String query = "UPDATE element_panier SET quantite = ? WHERE produit_id = ? AND panier_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, nouvelleQuantite);
+            statement.setInt(2, produitId);
+            statement.setInt(3, currentUser.getPanierId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void passerCommande() {
         if (produitsPanier.isEmpty()) {
             JOptionPane.showMessageDialog(vue, "Votre panier est vide !", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        if (afficherFormulaireLivraison()&&afficherFormulairePaiement()) {
+            afficherConfirmationCommande();
 
-        try (Connection connection = JdbcDataSource.getConnection()) {
-            connection.setAutoCommit(false);
+            try (Connection connection = JdbcDataSource.getConnection()) {
+                connection.setAutoCommit(false);
 
-            int nouveauPanierId = -1;
-            String insertPanierQuery = "INSERT INTO panier (utilisateur_id, taille) VALUES (?, ?)";
-            try (PreparedStatement insertPanierStmt = connection.prepareStatement(insertPanierQuery, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                insertPanierStmt.setInt(1, currentUser.getId());
-                insertPanierStmt.setInt(2, produitsPanier.size());
-                insertPanierStmt.executeUpdate();
+                int nouveauPanierId = -1;
+                String insertPanierQuery = "INSERT INTO panier (utilisateur_id, taille) VALUES (?, ?)";
+                try (PreparedStatement insertPanierStmt = connection.prepareStatement(insertPanierQuery, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    insertPanierStmt.setInt(1, currentUser.getId());
+                    insertPanierStmt.setInt(2, produitsPanier.size());
+                    insertPanierStmt.executeUpdate();
 
-                ResultSet generatedKeys = insertPanierStmt.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    nouveauPanierId = generatedKeys.getInt(1);
+                    ResultSet generatedKeys = insertPanierStmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        nouveauPanierId = generatedKeys.getInt(1);
+                    }
                 }
-            }
 
-            if (nouveauPanierId == -1) {
-                throw new SQLException("Erreur lors de la création du nouveau panier.");
-            }
-
-            // Insertion des éléments du panier
-            String insertElementPanierQuery = """
-            INSERT INTO element_panier (panier_id, produit_id, quantite)
-            VALUES (?, ?, ?)
-        """;
-
-            try (PreparedStatement insertElementStmt = connection.prepareStatement(insertElementPanierQuery)) {
-                for (int i = 0; i < produitsPanier.size(); i++) {
-                    Produit produit = produitsPanier.get(i);
-                    int quantite = quantitesPanier.get(i);
-                    insertElementStmt.setInt(1, nouveauPanierId);
-                    insertElementStmt.setInt(2, produit.getIdProduit());
-                    insertElementStmt.setInt(3, quantite);
-                    insertElementStmt.addBatch();
+                if (nouveauPanierId == -1) {
+                    throw new SQLException("Erreur lors de la création du nouveau panier.");
                 }
-                insertElementStmt.executeBatch();
+
+                String insertElementPanierQuery = """
+                INSERT INTO element_panier (panier_id, produit_id, quantite)
+                VALUES (?, ?, ?)""";
+
+                try (PreparedStatement insertElementStmt = connection.prepareStatement(insertElementPanierQuery)) {
+                    for (int i = 0; i < produitsPanier.size(); i++) {
+                        Produit produit = produitsPanier.get(i);
+                        int quantite = quantitesPanier.get(i);
+                        insertElementStmt.setInt(1, nouveauPanierId);
+                        insertElementStmt.setInt(2, produit.getIdProduit());
+                        insertElementStmt.setInt(3, quantite);
+                        insertElementStmt.addBatch();
+                    }
+                    insertElementStmt.executeBatch();
+                }
+
+                connection.commit();
+
+                String deleteOldPanierQuery = "DELETE FROM element_panier WHERE panier_id = ?";
+                try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanierQuery)) {
+                    deleteStmt.setInt(1, currentUser.getPanierId());
+                    deleteStmt.executeUpdate();
+                }
+
+                produitsPanier.clear();
+                quantitesPanier.clear();
+                vue.getProduitsPanel().removeAll();
+                vue.getTotalLabel().setText("Total : 0.0€");
+                vue.getProduitsPanel().repaint();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(vue, "Erreur lors du passage de la commande.", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
-
-            connection.commit();
-            String deleteOldPanierQuery = "DELETE FROM element_panier WHERE panier_id = ?";
-            try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanierQuery)) {
-                deleteStmt.setInt(1, currentUser.getPanierId());
-                deleteStmt.executeUpdate();
-            }
-
-            // Réinitialisation de l'affichage
-            produitsPanier.clear();
-            quantitesPanier.clear();
-            vue.getProduitsPanel().removeAll();
-            vue.getTotalLabel().setText("Total : 0.0€");
-            vue.getProduitsPanel().repaint();
-
-            JOptionPane.showMessageDialog(vue, "Commande passée avec succès avec un nouvel ID !", "Succès", JOptionPane.INFORMATION_MESSAGE);
-
-            if (vue.getUserPanel() != null) {
-                vue.getUserPanel().refreshPage();
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(vue, "Erreur lors du passage de la commande.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+        if (vue.getUserPanel() != null) {
+            vue.getUserPanel().refreshPage();
         }
     }
 
-    // Calcule le total du panier en tenant compte des réductions
     private double calculerTotal() {
         double total = 0;
 
@@ -292,7 +296,6 @@ public class PanierController {
         return total;
     }
 
-    // Supprime un produit du panier dans la base de données
     private boolean supprimerProduitDansDB(int produitId) {
         try (Connection connection = JdbcDataSource.getConnection()) {
             String query = "DELETE FROM element_panier WHERE produit_id = ? AND panier_id = ?";
@@ -306,7 +309,6 @@ public class PanierController {
         }
     }
 
-    // Affiche un message si l'utilisateur n'est pas connecté
     public void afficherMessageUtilisateurNonConnecte() {
         JPanel produitsPanel = vue.getProduitsPanel();
         produitsPanel.removeAll();
@@ -317,4 +319,242 @@ public class PanierController {
         produitsPanel.revalidate();
         produitsPanel.repaint();
     }
+
+
+    private boolean afficherFormulaireLivraison() {
+        JPanel livraisonPanel = new JPanel();
+        livraisonPanel.setLayout(new BorderLayout(10, 10));
+        livraisonPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Titre
+        JLabel titre = new JLabel("Formulaire de livraison");
+        titre.setFont(new Font("SansSerif", Font.BOLD, 20));
+        titre.setHorizontalAlignment(SwingConstants.CENTER);
+        livraisonPanel.add(titre, BorderLayout.NORTH);
+
+        // Centre : Formulaire
+        JPanel adressePanel = new JPanel(new GridLayout(6, 2, 10, 10));
+
+        adressePanel.add(new JLabel("Nom :"));
+        JTextField champNom = new JTextField();
+        adressePanel.add(champNom);
+
+        adressePanel.add(new JLabel("Prénom :"));
+        JTextField champPrenom = new JTextField();
+        adressePanel.add(champPrenom);
+
+        adressePanel.add(new JLabel("Adresse :"));
+        JTextField champAdresse = new JTextField();
+        adressePanel.add(champAdresse);
+
+        adressePanel.add(new JLabel("Code postal :"));
+        JTextField champCodePostal = new JTextField();
+        adressePanel.add(champCodePostal);
+
+        adressePanel.add(new JLabel("Ville :"));
+        JTextField champVille = new JTextField();
+        adressePanel.add(champVille);
+
+        adressePanel.add(new JLabel("Pays :"));
+        JComboBox<String> comboPays = new JComboBox<>();
+
+// Remplissage des pays
+        String[] countryCodes = Locale.getISOCountries();
+        List<String> countryList = new ArrayList<>();
+        for (String code : countryCodes) {
+            Locale locale = new Locale("", code);
+            countryList.add(locale.getDisplayCountry());
+        }
+        Collections.sort(countryList);
+        for (String country : countryList) {
+            comboPays.addItem(country);
+        }
+
+        adressePanel.add(comboPays);
+
+        livraisonPanel.add(adressePanel, BorderLayout.CENTER);
+
+        // Sud : Bouton valider
+        JButton valider = new JButton("Valider l'adresse de livraison");
+        valider.setBackground(new Color(255, 102, 0));
+        valider.setForeground(Color.WHITE);
+        valider.setFont(new Font("SansSerif", Font.BOLD, 14));
+        valider.setFocusPainted(false);
+
+        int result = JOptionPane.showConfirmDialog(
+                vue, livraisonPanel, "Informations de livraison", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
+        );
+
+        return result == JOptionPane.OK_OPTION;
+    }
+
+    private boolean afficherFormulairePaiement() {
+        JPanel paiementPanel = new JPanel();
+        paiementPanel.setLayout(new BorderLayout(10, 10));
+        paiementPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Titre
+        JLabel titre = new JLabel("Formulaire de paiement");
+        titre.setFont(new Font("SansSerif", Font.BOLD, 20));
+        titre.setHorizontalAlignment(SwingConstants.CENTER);
+        paiementPanel.add(titre, BorderLayout.NORTH);
+
+        // Centre : Formulaire
+        JPanel formulaire = new JPanel(new GridLayout(4, 2, 10, 10));
+
+        formulaire.add(new JLabel("Nom du titulaire :"));
+        JTextField champNom = new JTextField();
+        formulaire.add(champNom);
+
+        formulaire.add(new JLabel("Numéro de carte :"));
+        JTextField champCarte = new JTextField();
+        formulaire.add(champCarte);
+
+        formulaire.add(new JLabel("Code de sécurité (CVV) :"));
+        JPasswordField champCode = new JPasswordField();
+        formulaire.add(champCode);
+
+        formulaire.add(new JLabel("Montant total à payer :"));
+        JLabel montantTotal = new JLabel("842 €");
+        montantTotal.setFont(new Font("SansSerif", Font.BOLD, 14));
+        formulaire.add(montantTotal);
+
+        paiementPanel.add(formulaire, BorderLayout.CENTER);
+
+        // Sud : Bouton valider
+        JButton valider = new JButton("Valider le paiement");
+        valider.setBackground(new Color(255, 102, 0));
+        valider.setForeground(Color.WHITE);
+        valider.setFont(new Font("SansSerif", Font.BOLD, 14));
+        valider.setFocusPainted(false);
+
+        int result = JOptionPane.showConfirmDialog(
+                vue, paiementPanel, "Informations de paiement", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
+        );
+
+        return result == JOptionPane.OK_OPTION;
+    }
+    private void afficherConfirmationCommande() {
+        // Panel principal
+        JPanel confirmPanel = new JPanel(new BorderLayout(10, 10));
+        confirmPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        confirmPanel.setBackground(Color.WHITE);
+
+        // Titre
+        JLabel titre = new JLabel("Confirmation de votre commande", SwingConstants.CENTER);
+        titre.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titre.setForeground(new Color(34, 139, 34));
+        confirmPanel.add(titre, BorderLayout.NORTH);
+
+        // Création du tableau de récapitulatif avec image
+        String[] colonnes = { "Image", "Produit", "Quantité", "Prix unitaire", "Sous-total" };
+        DefaultTableModel model = new DefaultTableModel(colonnes, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                // Indiquer que la première colonne contient des icônes
+                if (column == 0) {
+                    return ImageIcon.class;
+                }
+                return super.getColumnClass(column);
+            }
+        };
+
+        for (int i = 0; i < produitsPanier.size(); i++) {
+            Produit p = produitsPanier.get(i);
+            int q = quantitesPanier.get(i);
+            double pu = p.getPrix();
+            double st = pu * q;
+
+            // Charger et redimensionner l'image du produit
+            ImageIcon productIcon = null;
+            try {
+                productIcon = new ImageIcon(
+                        new ImageIcon(p.getImagePath()).getImage()
+                                .getScaledInstance(80, 80, Image.SCALE_SMOOTH)
+                );
+            } catch (Exception e) {
+                productIcon = new ImageIcon(); // Si l'image est introuvable, on utilise une image vide
+            }
+
+            model.addRow(new Object[]{
+                    productIcon,
+                    p.getNomProduit(),
+                    q,
+                    String.format("%.2f €", pu),
+                    String.format("%.2f €", st)
+            });
+        }
+
+        JTable table = new JTable(model);
+        table.setRowHeight(80);  // Ajuster la hauteur des lignes pour afficher l'image correctement
+        table.getColumnModel().getColumn(0).setMaxWidth(100); // Limiter la taille de la colonne des images
+        table.getTableHeader().setReorderingAllowed(false);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Ajouter un renderer pour la colonne des images
+        table.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table,
+                                                           Object value,
+                                                           boolean isSelected,
+                                                           boolean hasFocus,
+                                                           int row,
+                                                           int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column
+                );
+                if (value instanceof ImageIcon) {
+                    label.setIcon((ImageIcon) value);
+                    label.setText(""); // Pas de texte, juste l'icône
+                }
+                return label;
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(table);
+        confirmPanel.add(scroll, BorderLayout.CENTER);
+
+        // Total
+        JLabel totalLabel = new JLabel(
+                "Montant total : " + String.format("%.2f €", calculerTotal()),
+                SwingConstants.RIGHT
+        );
+        totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        totalLabel.setForeground(new Color(34, 139, 34));
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(Color.WHITE);
+        bottomPanel.add(totalLabel, BorderLayout.CENTER);
+
+        // Bouton Fermer
+        JButton fermerBtn = new JButton("Fermer");
+        fermerBtn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        fermerBtn.setBackground(new Color(83, 83, 83));
+        fermerBtn.setForeground(Color.WHITE);
+        fermerBtn.setFocusPainted(false);
+        fermerBtn.addActionListener(e -> {
+            // Ferme la fenêtre
+            SwingUtilities.getWindowAncestor(fermerBtn).dispose();
+        });
+        JPanel btnPanel = new JPanel();
+        btnPanel.setBackground(Color.WHITE);
+        btnPanel.add(fermerBtn);
+        bottomPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        confirmPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        // Création et affichage de la fenêtre
+        JFrame frame = new JFrame("Confirmation de la commande");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(900, 600);            // Format paysage plus grand
+        frame.setLocationRelativeTo(null);  // Centré à l'écran
+        frame.setContentPane(confirmPanel);
+        frame.setVisible(true);
+    }
+
+
 }
