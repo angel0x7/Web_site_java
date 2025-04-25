@@ -45,7 +45,7 @@ public class MainShopWindow extends JFrame {
 
         // Pages communes
         contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
-        
+
         contentPanel.add(new ListeProduitsPage(currentUser), "Tous Produits");
 
         // Panier

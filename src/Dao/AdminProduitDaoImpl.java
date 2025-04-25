@@ -4,6 +4,9 @@ package Dao;
 import Modele.Produit;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
@@ -186,4 +189,30 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         }
 
     }
+    // Dans AdminProduitDaoImpl.java
+    // Dans AdminProduitDaoImpl.java
+    public List<Map.Entry<String, Integer>> getTopSellingProducts() {
+        Map<String, Integer> topSellingProducts = new HashMap<>();
+        String query = "SELECT p.nom, SUM(ep.quantite) as totalVendu " +
+                "FROM element_panier ep " +
+                "JOIN produit p ON ep.produit_id = p.id " +
+                "GROUP BY p.nom " +
+                "ORDER BY totalVendu ASC " + // Changer DESC en ASC pour l'ordre croissant
+                "LIMIT 10";
+
+        try (Connection conn = daoFactory.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                topSellingProducts.put(rs.getString("nom"), rs.getInt("totalVendu"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new ArrayList<>(topSellingProducts.entrySet());
+    }
+
+
 }
