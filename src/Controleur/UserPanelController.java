@@ -1,6 +1,8 @@
 package Controleur;
 
+import Dao.AvisDaoImpl;
 import Dao.JdbcDataSource;
+import Modele.Avis;
 import Modele.User;
 import Vue.UserPanel;
 
@@ -10,11 +12,14 @@ import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.List;
 
 
 public class UserPanelController {
     private User user;
     private UserPanel panel;
+    private AvisDaoImpl avisDao= new AvisDaoImpl();
+
 
     public UserPanelController(User user, UserPanel panel) {
         this.user = user;
@@ -163,8 +168,11 @@ public class UserPanelController {
 
         JTextField titreField = new JTextField();
         JTextField noteField = new JTextField();
+        JLabel nomProduit = new JLabel(produitNom);
         JTextArea descArea = new JTextArea(5, 20);
         JPanel avisPanel = new JPanel(new GridLayout(0, 2));
+        avisPanel.add(new JLabel("Produit :")); avisPanel.add(nomProduit);
+
         avisPanel.add(new JLabel("Titre :")); avisPanel.add(titreField);
         avisPanel.add(new JLabel("Note (1-5) :")); avisPanel.add(noteField);
         avisPanel.add(new JLabel("Description :")); avisPanel.add(new JScrollPane(descArea));
@@ -182,22 +190,15 @@ public class UserPanelController {
             }
 
             String desc = descArea.getText();
-            try (Connection conn = JdbcDataSource.getConnection()) {
-                String insert = "INSERT INTO avis (titre, note, description, produit_id, user_id) VALUES (?, ?, ?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(insert);
-                stmt.setString(1, titre);
-                stmt.setInt(2, note);
-                stmt.setString(3, desc);
-                stmt.setInt(4, produitId);
-                stmt.setInt(5, user.getId());
-                stmt.executeUpdate();
-                JOptionPane.showMessageDialog(panel, "Avis ajouté.", "Succès", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(panel, "Erreur lors de l'ajout.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            }
+            Avis avis= new Avis(0,titre,note,desc,produitId,user.getId());
+            avisDao.ajouter(avis);
+
         }
     }
+
+//    public List<Avis> voirAvis(int userId) {
+//
+//    }
 
     private int getProductIdByName(String nom) {
         try (Connection conn = JdbcDataSource.getConnection()) {

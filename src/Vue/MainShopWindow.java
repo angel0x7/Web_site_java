@@ -93,7 +93,7 @@ public class MainShopWindow extends JFrame {
 
         // Admin & User pages
         contentPanel.add(new AdminPanel(), "Admin");
-        contentPanel.add(new UserPanel(currentUser), "User");
+        contentPanel.add(new UserPanel(currentUser), "Historique");
 
         showPage("home");
     }
@@ -121,7 +121,7 @@ public class MainShopWindow extends JFrame {
         JButton btnVentesFlash = createStyledButton("Vente Flash");
         JButton btnPanier = createStyledButton("Panier");
         btnAdmin = createStyledButton("Admin");
-        btnUser = createStyledButton("User");
+        btnUser = createStyledButton("Historique");
 
         btnVentesFlash.addActionListener(e -> showPage("Vente Flash"));
         MonCompte.addActionListener(e -> {
@@ -181,7 +181,7 @@ public class MainShopWindow extends JFrame {
         });
 
         btnAdmin.addActionListener(e -> showPage("Admin"));
-        btnUser.addActionListener(e -> showPage("User"));
+        btnUser.addActionListener(e -> showPage("Historique"));
 
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             btnAdmin.setVisible(false);

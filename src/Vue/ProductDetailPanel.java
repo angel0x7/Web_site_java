@@ -42,15 +42,14 @@ public class ProductDetailPanel extends JPanel {
         leftPanel.add(imageLabel);
         leftPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // ========= Section Ajouter un avis =========
         JPanel addAvisPanel = new JPanel();
         addAvisPanel.setLayout(new BoxLayout(addAvisPanel, BoxLayout.Y_AXIS));
         addAvisPanel.setBackground(new Color(245, 245, 245));
         addAvisPanel.setBorder(BorderFactory.createTitledBorder("Ajouter un avis"));
-        addAvisPanel.setMaximumSize(new Dimension(600, 300)); // <- AJOUTÉ
+        addAvisPanel.setMaximumSize(new Dimension(600, 300));
 
         JTextField titreField = new JTextField();
-        titreField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30)); // <- AJOUTÉ
+        titreField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         titreField.setAlignmentX(Component.CENTER_ALIGNMENT);
         titreField.setBorder(BorderFactory.createTitledBorder("Titre"));
 

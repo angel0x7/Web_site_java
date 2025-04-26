@@ -1,6 +1,7 @@
 package Vue;
 
 import Controleur.UserPanelController;
+import Dao.AvisDaoImpl;
 import Modele.User;
 
 import javax.swing.*;
@@ -20,6 +21,7 @@ public class UserPanel extends JPanel {
     public UserPanel(User user) {
         this.currentUser = user;
         this.controller = new UserPanelController(user, this);
+
 
         this.setLayout(new BorderLayout());
 
