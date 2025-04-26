@@ -6,11 +6,10 @@ import Dao.AdminReductionDaoImpl;
 import Dao.DaoFactory;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.Comparator;
 
 public class AdminPanel extends JPanel {
     private CardLayout contentLayout;
@@ -20,48 +19,43 @@ public class AdminPanel extends JPanel {
     public AdminPanel() {
         setLayout(new BorderLayout());
 
-        // --- Barre de boutons centrée ---
-        JPanel buttonPanel = new JPanel(new GridBagLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 15)); // Centrage et espacement des boutons
         buttonPanel.setBackground(new Color(30, 30, 30));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 20, 10, 20); // Espacement entre les boutons
-        gbc.gridy = 0;
+
+        Dimension buttonSize = new Dimension(250, 45); // Definition de la longueur des boutons
 
         JButton btnMarques = createStyledButton("Gérer les Marques");
+        btnMarques.setPreferredSize(buttonSize);
+
         JButton btnProduits = createStyledButton("Gérer les Produits");
+        btnProduits.setPreferredSize(buttonSize);
+
         JButton btnCategories = createStyledButton("Gérer les Réductions");
-        JButton btnShowTopSelling = createStyledButton("Afficher les articles les plus vendus");
+        btnCategories.setPreferredSize(buttonSize);
 
-        // Centrage horizontal avec gridx
-        gbc.gridx = 0;
-        buttonPanel.add(btnMarques, gbc);
+        JButton btnShowTopSelling = createStyledButton("Articles les plus vendus");
+        btnShowTopSelling.setPreferredSize(buttonSize);
 
-        gbc.gridx = 1;
-        buttonPanel.add(btnProduits, gbc);
-
-        gbc.gridx = 2;
-        buttonPanel.add(btnCategories, gbc);
-
-        gbc.gridx = 3;
-        buttonPanel.add(btnShowTopSelling, gbc);
+// Ajout des boutons
+        buttonPanel.add(btnMarques);
+        buttonPanel.add(btnProduits);
+        buttonPanel.add(btnCategories);
+        buttonPanel.add(btnShowTopSelling);
 
         add(buttonPanel, BorderLayout.NORTH);
 
-        // --- Panel central avec CardLayout ---
         contentLayout = new CardLayout();
         contentPanel = new JPanel(contentLayout);
         contentPanel.setBackground(Color.lightGray);
         add(contentPanel, BorderLayout.CENTER);
 
-        // --- DAO Factory ---
         daoFactory = new DaoFactory("jdbc:mysql://localhost:3306/shopping", "root", "");
 
-        // --- Vues spécifiques ---
         AdminMarqueVue marqueVue = new AdminMarqueVue(new AdminMarqueDaoImpl(daoFactory));
         AdminProduitVue produitVue = new AdminProduitVue(new AdminProduitDaoImpl(daoFactory));
         AdminReductionVue reductionVue = new AdminReductionVue(new AdminReductionDaoImpl(daoFactory));
+        JPanel topSellingPanel = createTopSellingPanel();
 
-        // --- Panneau vide par défaut ---
         JPanel emptyPanel = new JPanel();
         emptyPanel.setBackground(Color.white);
         JLabel label = new JLabel("Veuillez sélectionner une section à gérer.");
@@ -69,20 +63,24 @@ public class AdminPanel extends JPanel {
         label.setFont(new Font("Arial", Font.BOLD, 18));
         emptyPanel.add(label);
 
-        // --- Ajout des vues ---
         contentPanel.add(emptyPanel, "vide");
         contentPanel.add(marqueVue, "marques");
         contentPanel.add(produitVue, "produits");
         contentPanel.add(reductionVue, "reductions");
+        contentPanel.add(topSellingPanel, "topselling");
 
-        // --- Affichage initial ---
         contentLayout.show(contentPanel, "vide");
 
-        // --- Gestion des clics ---
+        // Ajout des action Listener pour une action lors d'un clic sur 1 des 4 boutons
         btnMarques.addActionListener(e -> contentLayout.show(contentPanel, "marques"));
         btnProduits.addActionListener(e -> contentLayout.show(contentPanel, "produits"));
         btnCategories.addActionListener(e -> contentLayout.show(contentPanel, "reductions"));
-        btnShowTopSelling.addActionListener(e -> showTopSellingProductsTable());
+        btnShowTopSelling.addActionListener(e -> {
+            contentPanel.remove(topSellingPanel); // Supprimer l'ancien panneau
+            JPanel updatedPanel = createTopSellingPanel(); // Créer le nouveau
+            contentPanel.add(updatedPanel, "topselling"); // Reajoute
+            contentLayout.show(contentPanel, "topselling");
+        });
     }
 
     private JButton createStyledButton(String text) {
@@ -97,32 +95,50 @@ public class AdminPanel extends JPanel {
         return button;
     }
 
-    private void showTopSellingProductsTable() {
+    private JPanel createTopSellingPanel() {
         AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl(daoFactory);
         List<Map.Entry<String, Integer>> topSellingProducts = produitDao.getTopSellingProducts();
 
-        // Trier les produits par quantité vendue dans l'ordre décroissant
         topSellingProducts.sort((entry1, entry2) -> Integer.compare(entry2.getValue(), entry1.getValue()));
 
-        String[] columnNames = {"Produit", "Quantité Vendue"};
-        Object[][] data = new Object[topSellingProducts.size()][2];
+        String[] columnNames = {"Classement", "Produit", "Quantité Vendue"};
+        Object[][] data = new Object[topSellingProducts.size()][3];
 
         for (int i = 0; i < topSellingProducts.size(); i++) {
             Map.Entry<String, Integer> entry = topSellingProducts.get(i);
-            data[i][0] = entry.getKey();
-            data[i][1] = entry.getValue();
+            data[i][0] = (i + 1);
+            data[i][1] = entry.getKey();
+            data[i][2] = entry.getValue();
         }
 
         JTable table = new JTable(data, columnNames);
+        table.setFont(new Font("Arial", Font.PLAIN, 16));
+        table.setRowHeight(30);
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
+        table.setGridColor(Color.GRAY);
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
         JScrollPane scrollPane = new JScrollPane(table);
-        table.setFillsViewportHeight(true);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+        scrollPane.getViewport().setBackground(Color.white);
 
-        JFrame frame = new JFrame("Top 10 Articles les Mieux Vendus");
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.add(scrollPane);
-        frame.setSize(400, 300);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.white);
+
+        JLabel title = new JLabel("Top 10 des Articles les Plus Vendus");
+        title.setFont(new Font("Arial", Font.BOLD, 24));
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        title.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        title.setForeground(Color.DARK_GRAY);
+
+        panel.add(title, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
     }
-
 }
