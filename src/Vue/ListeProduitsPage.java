@@ -85,6 +85,7 @@ public class ListeProduitsPage extends JPanel {
         card.setBorder(new LineBorder(new Color(220, 220, 220), 1, true));
         card.setBackground(Color.WHITE);
         card.setPreferredSize(new Dimension(200, 300));
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JLabel productImage = new JLabel();
         productImage.setHorizontalAlignment(SwingConstants.CENTER);
@@ -138,7 +139,6 @@ public class ListeProduitsPage extends JPanel {
         addToCartButton.addActionListener(e -> controller.handleAddToCart(produit));
         detailsPanel.add(addToCartButton);
 
-        card.add(detailsPanel, BorderLayout.SOUTH);
         card.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -147,6 +147,8 @@ public class ListeProduitsPage extends JPanel {
                 }
             }
         });
+        card.add(detailsPanel, BorderLayout.SOUTH);
         return card;
+
     }
 }

@@ -16,11 +16,9 @@ import java.util.ArrayList;
  * ProduitDao.
  */
 public class AvisDaoImpl implements AvisDao {
-    private DaoFactory daoFactory;
 
+    public AvisDaoImpl() {
 
-    public AvisDaoImpl(DaoFactory daoFactory) {
-        this.daoFactory = daoFactory;
     }
 
 
@@ -37,7 +35,7 @@ public class AvisDaoImpl implements AvisDao {
 
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();;
+            Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
 
@@ -70,7 +68,7 @@ public class AvisDaoImpl implements AvisDao {
     public void ajouter(Avis avis) {
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();
+            Connection connexion = JdbcDataSource.getConnection();
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "insert into avis(titre,note,description,produit_id,user_id) values('" + avis.getTitre() + "'," +
                             avis.getNote() + ",'" + avis.getDescription() +"',"+avis.getProduitId()+","+avis.getClientId() +")");
@@ -90,7 +88,7 @@ public class AvisDaoImpl implements AvisDao {
         Avis avis = null;
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();;
+            Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
 
@@ -125,7 +123,7 @@ public class AvisDaoImpl implements AvisDao {
         ArrayList<Avis> listeAvis = new  ArrayList<Avis>();
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();;
+            Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
 
@@ -157,7 +155,7 @@ public class AvisDaoImpl implements AvisDao {
         ArrayList<Avis> listeAvis = new  ArrayList<Avis>();
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();;
+            Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
             ResultSet resultats = statement.executeQuery("select * from avis  where produit_id="+idProduit);
 
@@ -188,7 +186,7 @@ public class AvisDaoImpl implements AvisDao {
     public void supprimer(int idAvis) {
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();
+            Connection connexion = JdbcDataSource.getConnection();
 
 
             PreparedStatement preparedStatement = connexion.prepareStatement(

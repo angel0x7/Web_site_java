@@ -2,6 +2,8 @@ package Vue;
 
 import javax.swing.*;
 import java.awt.*;
+
+import Controleur.VentesFlashController;
 import Modele.User;
 
 public class MainShopWindow extends JFrame {
@@ -44,9 +46,38 @@ public class MainShopWindow extends JFrame {
 
 
         // Pages communes
-        contentPanel.add(new VentesFlashPage(currentUser), "Vente Flash");
+        VentesFlashPage ventesFlashPage=new VentesFlashPage(currentUser);
+        ventesFlashPage.setProductClickListener(produit -> {
+            detailPanelContainer.removeAll();
+            detailPanelContainer.add(
+                    new ProductDetailPanel(produit, currentUser, () -> {
+                        detailPanelContainer.setVisible(false);
+                        detailPanelContainer.removeAll();
+                    })
+            );
+            detailPanelContainer.setVisible(true);
+            this.revalidate();
+            this.repaint();
+        });
+        contentPanel.add(ventesFlashPage, "Vente Flash");
 
-        contentPanel.add(new ListeProduitsPage(currentUser), "Tous Produits");
+
+        ListeProduitsPage tousProduitsPage = new ListeProduitsPage(currentUser);
+
+        tousProduitsPage.setProductClickListener(produit -> {
+            detailPanelContainer.removeAll();
+            detailPanelContainer.add(
+                    new ProductDetailPanel(produit, currentUser, () -> {
+                        detailPanelContainer.setVisible(false);
+                        detailPanelContainer.removeAll();
+                    })
+            );
+            detailPanelContainer.setVisible(true);
+            this.revalidate();
+            this.repaint();
+        });
+        contentPanel.add(tousProduitsPage, "Tous Produits");
+
 
         // Panier
         panierPage = new PanierPage(currentUser);
@@ -185,10 +216,9 @@ public class MainShopWindow extends JFrame {
         cardLayout.show(contentPanel, page);
     }
 
-    /**
-     * Méthode qui affiche une CategoriesPage avec gestion du clic produit
-     */
     private void afficherCategoriesPage(String categorie) {
+
+        // Création d'une nouvelle page
         CategoriesPage page = new CategoriesPage(currentUser, categorie);
         page.setProductClickListener(produit -> {
             detailPanelContainer.removeAll();
@@ -201,8 +231,10 @@ public class MainShopWindow extends JFrame {
             repaint();
         });
 
-        contentPanel.add(page, "Catégories");
-        showPage("Catégories");
+        String pageName = "Categorie_" + categorie;
+        contentPanel.add(page, pageName);
+
+        showPage(pageName);
     }
 
     public static void main(String[] args) {
