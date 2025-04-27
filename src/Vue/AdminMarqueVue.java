@@ -246,6 +246,7 @@ public class AdminMarqueVue extends JPanel {
 
             for (JButton btn : new JButton[]{btnModifier, btnSupprimer}) {
                 btn.setFocusPainted(false);
+                btn.setPreferredSize(new Dimension(20, 20));
                 btn.setBackground(new Color(180, 180, 180));
                 btn.setForeground(Color.BLACK);
                 btn.setFont(new Font("Arial", Font.PLAIN, 12));

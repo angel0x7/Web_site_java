@@ -25,7 +25,7 @@ public class AdminProduitVue extends JPanel {
         this.produitDao = produitDao;
         setLayout(new BorderLayout());
 
-        String[] columnNames = {"ID", "Nom", "Description", "Quantité", "Prix", "Image", "Catégorie", "Actions"};
+        String[] columnNames = {"ID", "Nom", "Description", "Quantité", "Prix", "Image", "Catégorie","Marque", "Actions"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model);
         table.setRowHeight(40);
@@ -68,6 +68,7 @@ public class AdminProduitVue extends JPanel {
         if (row < 0 || row >= model.getRowCount()) {
             return null;
         }
+
         return new Produit(
                 (int) model.getValueAt(row, 0),
                 (String) model.getValueAt(row, 1),
@@ -76,7 +77,7 @@ public class AdminProduitVue extends JPanel {
                 (double) model.getValueAt(row, 4),
                 (String) model.getValueAt(row, 5),
                 (String) model.getValueAt(row, 6),
-                0
+                (int) model.getValueAt(row, 7)
         );
     }
 
@@ -101,6 +102,7 @@ public class AdminProduitVue extends JPanel {
                     p.getPrix(),
                     p.getImage(),
                     p.getCategorie(),
+                    p.getIdMarque(),
                     panelActions
             });
 
@@ -118,6 +120,7 @@ public class AdminProduitVue extends JPanel {
                 Dialog.ModalityType.APPLICATION_MODAL);
 
         fenetreProduit.setLayout(new GridLayout(8, 2));
+        fenetreProduit.setMinimumSize(new Dimension(500, 500));
         fenetreProduit.setLocationRelativeTo(this);
 
         JTextField txtNom = new JTextField(produit != null ? produit.getNomProduit() : "");
@@ -140,6 +143,10 @@ public class AdminProduitVue extends JPanel {
             if (marqueActuel != null) {
                 comboMarques.setSelectedItem(marqueActuel.getNom());
             }
+        }
+        if(produit!=null){
+            Marque marque = marqueDao.getById(produit.getIdMarque());
+            comboMarques.setSelectedItem(marque.getNom());
         }
 
         fenetreProduit.add(new JLabel("Nom:"));

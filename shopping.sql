@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Hôte : 127.0.0.1
--- Généré le : dim. 13 avr. 2025 à 13:58
--- Version du serveur : 10.4.32-MariaDB
--- Version de PHP : 8.0.30
+-- Hôte : 127.0.0.1:3306
+-- Généré le : dim. 27 avr. 2025 à 11:59
+-- Version du serveur : 8.0.41
+-- Version de PHP : 8.3.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -27,34 +27,32 @@ SET time_zone = "+00:00";
 -- Structure de la table `avis`
 --
 
-CREATE TABLE `avis` (
-  `id` int(11) NOT NULL,
-  `titre` varchar(255) NOT NULL,
-  `note` int(11) NOT NULL,
-  `description` varchar(10000) NOT NULL,
-  `produit_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `avis`;
+CREATE TABLE IF NOT EXISTS `avis` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `titre` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `note` int NOT NULL,
+  `description` varchar(10000) COLLATE utf8mb4_general_ci NOT NULL,
+  `produit_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_avis_produit` (`produit_id`),
+  KEY `fk_avis_user` (`user_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `avis`
 --
 
 INSERT INTO `avis` (`id`, `titre`, `note`, `description`, `produit_id`, `user_id`) VALUES
-(1, 'bien', 5, 'sa va ', 1, 87),
-(2, 'gg', 7, 'jsp quoi dire', 2, 87),
-(3, 'tttt', 5, 'yyy', 1, 87),
-(4, 'yyyy', 5, 'yyy', 2, 87),
-(5, 'hh', 5, 'jj', 2, 87),
-(6, 'jj', 5, 'jjj', 1, 87),
+(1, 'Bien', 5, 'Bon produit', 1, 87),
+(2, 'Sympathique', 4, 'Une valeur sûre', 7, 87),
 (7, 'tres bien', 9, 'top', 2, 87),
-(8, 'muy bien', 8, 'perfecto', 1, 88),
 (9, 'bien', 8, 'top ', 2, 87),
 (10, 'super', 5, 'top', 3, 87),
 (11, 'c bien', 4, 'top', 2, 87),
-(12, 'hh', 5, 'mj', 1, 87),
 (13, 'trop topp', 4, 'super produit', 10, 87),
-(14, 'trop', 4, 'super', 3, 87);
+(15, 'Pas mal', 3, 'Cher pour la qualité', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -62,12 +60,16 @@ INSERT INTO `avis` (`id`, `titre`, `note`, `description`, `produit_id`, `user_id
 -- Structure de la table `element_panier`
 --
 
-CREATE TABLE `element_panier` (
-  `id` int(11) NOT NULL,
-  `quantite` int(11) NOT NULL,
-  `produit_id` int(11) NOT NULL,
-  `panier_id` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `element_panier`;
+CREATE TABLE IF NOT EXISTS `element_panier` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `quantite` int NOT NULL,
+  `produit_id` int NOT NULL,
+  `panier_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_element_panier` (`panier_id`),
+  KEY `fk_produit_panier` (`produit_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `element_panier`
@@ -94,7 +96,28 @@ INSERT INTO `element_panier` (`id`, `quantite`, `produit_id`, `panier_id`) VALUE
 (50, 2, 10, 18),
 (52, 3, 6, 19),
 (60, 1, 7, 11),
-(63, 2, 7, 20);
+(63, 2, 7, 20),
+(78, 1, 8, 26),
+(98, 2, 8, 35),
+(67, 1, 4, 22),
+(70, 1, 3, 23),
+(71, 1, 7, 23),
+(72, 1, 7, 24),
+(75, 1, 6, 25),
+(76, 1, 7, 25),
+(80, 1, 5, 27),
+(82, 1, 5, 28),
+(84, 1, 5, 29),
+(86, 1, 5, 30),
+(88, 1, 5, 31),
+(90, 1, 7, 32),
+(92, 1, 8, 33),
+(99, 1, 5, 21),
+(95, 1, 6, 34),
+(96, 1, 8, 34),
+(100, 1, 6, 0),
+(101, 1, 1, 36),
+(102, 1, 2, 36);
 
 -- --------------------------------------------------------
 
@@ -102,12 +125,25 @@ INSERT INTO `element_panier` (`id`, `quantite`, `produit_id`, `panier_id`) VALUE
 -- Structure de la table `marque`
 --
 
-CREATE TABLE `marque` (
-  `id` int(11) NOT NULL,
-  `nom` varchar(255) NOT NULL,
-  `image` varchar(255) NOT NULL,
-  `description` varchar(10000) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `marque`;
+CREATE TABLE IF NOT EXISTS `marque` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `image` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `description` varchar(10000) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `marque`
+--
+
+INSERT INTO `marque` (`id`, `nom`, `image`, `description`) VALUES
+(1, 'Apple', 'apple.png', 'Plus grande marque de produits électroniques des USA'),
+(2, 'Samsung', 'samsung.png', 'Marque coréenne'),
+(3, 'Sony', 'sony.png', 'Marque connue pour sa license PlayStation mais aussi ses produits de son'),
+(4, 'Nintendo', 'nintendo.png', 'Marque japonaise du jeu vidéo'),
+(5, 'Xiaomi', 'xiaomi.png', 'Entreprise Chinoise de produits électroniques');
 
 -- --------------------------------------------------------
 
@@ -115,11 +151,14 @@ CREATE TABLE `marque` (
 -- Structure de la table `panier`
 --
 
-CREATE TABLE `panier` (
-  `id` int(11) NOT NULL,
-  `utilisateur_id` int(11) NOT NULL,
-  `taille` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `panier`;
+CREATE TABLE IF NOT EXISTS `panier` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `utilisateur_id` int NOT NULL,
+  `taille` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_users` (`utilisateur_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `panier`
@@ -135,7 +174,23 @@ INSERT INTO `panier` (`id`, `utilisateur_id`, `taille`) VALUES
 (17, 87, 4),
 (18, 87, 3),
 (19, 87, 2),
-(20, 87, 2);
+(20, 87, 2),
+(21, 89, 2),
+(22, 2, 1),
+(23, 89, 2),
+(24, 89, 1),
+(25, 89, 2),
+(26, 89, 1),
+(27, 89, 1),
+(28, 89, 1),
+(29, 89, 1),
+(30, 89, 1),
+(31, 89, 1),
+(32, 89, 1),
+(33, 89, 1),
+(34, 89, 2),
+(35, 89, 1),
+(36, 90, 2);
 
 -- --------------------------------------------------------
 
@@ -143,32 +198,39 @@ INSERT INTO `panier` (`id`, `utilisateur_id`, `taille`) VALUES
 -- Structure de la table `produit`
 --
 
-CREATE TABLE `produit` (
-  `id` int(11) NOT NULL,
-  `nom` varchar(255) NOT NULL,
-  `image` varchar(255) NOT NULL,
-  `marque_id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `produit`;
+CREATE TABLE IF NOT EXISTS `produit` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `image` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `marque_id` int NOT NULL,
   `prix` double NOT NULL,
-  `quantite` int(11) NOT NULL,
-  `description` varchar(255) NOT NULL,
-  `category` varchar(255) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `quantite` int NOT NULL,
+  `description` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `category` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_marque_produit` (`marque_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `produit`
 --
 
 INSERT INTO `produit` (`id`, `nom`, `image`, `marque_id`, `prix`, `quantite`, `description`, `category`) VALUES
-(1, 'Iphone', 'iphone.png', 0, 1984, 5, 'tel taxé', 'electronique'),
-(2, 'Samsung', 'telsamsung.png', 7, 500, 5, 'android', 'telephone'),
-(3, '4 chevaux', '4cv.png', 44, 8000, 1, 'voiture', 'vehicule'),
-(4, 'Macbook Air M1', 'macbook.png', 1, 1200, 10, 'Ordinateur portable léger', 'electronique'),
-(5, 'Xiaomi Redmi Note 12', 'redmi.png', 2, 300, 50, 'Smartphone milieu de gamme', 'telephone'),
-(6, 'Nintendo Switch OLED', 'switch.png', 3, 350, 20, 'Console de jeu portable', 'console'),
-(7, 'TV Samsung 50’’ 4K', 'tv.png', 7, 600, 15, 'Télévision Smart 50 pouces', 'electronique'),
-(8, 'Casque Bose 700', 'casque.png', 10, 400, 30, 'Casque réduction de bruit', 'accessoires'),
-(9, 'Trottinette Xiaomi Pro', 'trot.png', 2, 500, 20, 'Trottinette électrique', 'mobilité urbaine'),
-(10, 'Playstation 5 Standard', 'ps5.png', 8, 550, 25, 'Console de nouvelle génération', 'console');
+(1, 'Iphone', 'iphone.png', 1, 1984, 5, 'tel taxé', 'telephones'),
+(2, 'Samsung', 'telsamsung.png', 2, 500, 5, 'android', 'telephones'),
+(4, 'Macbook Air M1', 'macbook.png', 1, 1200, 10, 'Ordinateur portable léger', 'ordinateurs'),
+(5, 'Xiaomi Redmi Note 12', 'redmi.png', 5, 300, 50, 'Smartphone milieu de gamme', 'telephones'),
+(6, 'Nintendo Switch', 'switch.png', 4, 350, 20, 'Console de jeu portable', 'consoles'),
+(7, 'TV Samsung 50’’ 4K', 'tv.png', 2, 600, 15, 'Télévision Smart 50 pouces', 'autres'),
+(8, 'Casque Sony WH1000XM4', 'casque.png', 3, 400, 30, 'Casque réduction de bruit', 'accessoires'),
+(9, 'Trottinette Xiaomi Pro', 'trot.png', 5, 500, 20, 'Trottinette électrique', 'autres'),
+(10, 'PlayStation 5', 'ps5.png', 3, 550, 25, 'Console de nouvelle génération', 'consoles'),
+(11, 'Samsung Galaxy Tab S9 FE Tablette', 'tabletteSamsung.png', 2, 500, 200, 'Tablette Samsung', 'autres'),
+(12, 'Enceinte Sony SRS-XB100', 'enceinteSony.png', 3, 50, 100, 'Enceinte pas cher mais très efficace', 'accessoires'),
+(13, 'Ordinateur Samsung Galaxy Book4 ', 'pcSamsung.png', 2, 900, 100, 'Ordinateur dernière génération', 'ordinateurs'),
+(14, 'Nintendo Switch Lite Console', 'switchLite.png', 4, 200, 2000, 'Petite console parfait pour les déplacements', 'consoles'),
+(15, 'Apple Watch SE', 'appleWatch.png', 1, 300, 300, 'Montre connectée Apple', 'accessoires');
 
 -- --------------------------------------------------------
 
@@ -176,13 +238,16 @@ INSERT INTO `produit` (`id`, `nom`, `image`, `marque_id`, `prix`, `quantite`, `d
 -- Structure de la table `reduction`
 --
 
-CREATE TABLE `reduction` (
-  `id` int(11) NOT NULL,
-  `nom` varchar(255) NOT NULL,
-  `quantite_vrac` int(11) NOT NULL,
+DROP TABLE IF EXISTS `reduction`;
+CREATE TABLE IF NOT EXISTS `reduction` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `quantite_vrac` int NOT NULL,
   `prix_vrac` double NOT NULL,
-  `produit_id` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `produit_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_reduction_produit` (`produit_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `reduction`
@@ -203,15 +268,18 @@ INSERT INTO `reduction` (`id`, `nom`, `quantite_vrac`, `prix_vrac`, `produit_id`
 -- Structure de la table `tab_admin`
 --
 
-CREATE TABLE `tab_admin` (
-  `id` int(11) NOT NULL,
-  `nom` varchar(50) NOT NULL,
-  `prenom` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `MotDePasse` varchar(255) NOT NULL,
-  `role` enum('SUPER_ADMIN','ADMIN') DEFAULT 'ADMIN',
-  `date_inscription` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `tab_admin`;
+CREATE TABLE IF NOT EXISTS `tab_admin` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `prenom` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `MotDePasse` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `role` enum('SUPER_ADMIN','ADMIN') COLLATE utf8mb4_general_ci DEFAULT 'ADMIN',
+  `date_inscription` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `tab_admin`
@@ -227,14 +295,17 @@ INSERT INTO `tab_admin` (`id`, `nom`, `prenom`, `email`, `MotDePasse`, `role`, `
 -- Structure de la table `tab_client`
 --
 
-CREATE TABLE `tab_client` (
-  `id` int(100) NOT NULL,
-  `nom` varchar(100) DEFAULT NULL,
-  `prenom` varchar(100) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  `MotDePasse` varchar(255) NOT NULL,
-  `date_inscription` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `tab_client`;
+CREATE TABLE IF NOT EXISTS `tab_client` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `prenom` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `MotDePasse` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `date_inscription` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `tab_client`
@@ -250,120 +321,9 @@ INSERT INTO `tab_client` (`id`, `nom`, `prenom`, `email`, `MotDePasse`, `date_in
 (81, 'Velasco', 'Angel', 'angel.velasco@gmail.com', 'angel123', '2025-03-28 17:32:40'),
 (86, 'ssss', 's', 's', 's', '2025-03-31 08:59:06'),
 (87, 'test', 'test', 'test', 'test', '2025-04-12 11:53:46'),
-(88, 'abuelo', 'abuelo', 'abuelo@gmail.com', '123', '2025-04-12 13:26:58');
-
---
--- Index pour les tables déchargées
---
-
---
--- Index pour la table `avis`
---
-ALTER TABLE `avis`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_avis_produit` (`produit_id`),
-  ADD KEY `fk_avis_user` (`user_id`);
-
---
--- Index pour la table `element_panier`
---
-ALTER TABLE `element_panier`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_element_panier` (`panier_id`),
-  ADD KEY `fk_produit_panier` (`produit_id`);
-
---
--- Index pour la table `marque`
---
-ALTER TABLE `marque`
-  ADD PRIMARY KEY (`id`);
-
---
--- Index pour la table `panier`
---
-ALTER TABLE `panier`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_users` (`utilisateur_id`);
-
---
--- Index pour la table `produit`
---
-ALTER TABLE `produit`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_marque_produit` (`marque_id`);
-
---
--- Index pour la table `reduction`
---
-ALTER TABLE `reduction`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_reduction_produit` (`produit_id`);
-
---
--- Index pour la table `tab_admin`
---
-ALTER TABLE `tab_admin`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- Index pour la table `tab_client`
---
-ALTER TABLE `tab_client`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- AUTO_INCREMENT pour les tables déchargées
---
-
---
--- AUTO_INCREMENT pour la table `avis`
---
-ALTER TABLE `avis`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
-
---
--- AUTO_INCREMENT pour la table `element_panier`
---
-ALTER TABLE `element_panier`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
-
---
--- AUTO_INCREMENT pour la table `marque`
---
-ALTER TABLE `marque`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT pour la table `panier`
---
-ALTER TABLE `panier`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT pour la table `produit`
---
-ALTER TABLE `produit`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT pour la table `reduction`
---
-ALTER TABLE `reduction`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT pour la table `tab_admin`
---
-ALTER TABLE `tab_admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT pour la table `tab_client`
---
-ALTER TABLE `tab_client`
-  MODIFY `id` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+(88, 'abuelo', 'abuelo', 'abuelo@gmail.com', '123', '2025-04-12 13:26:58'),
+(89, 'A', 'Mike', 'Mike', 'root', '2025-04-15 11:09:13'),
+(90, 'mike', 'mike', 'root', 'root', '2025-04-27 12:07:48');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

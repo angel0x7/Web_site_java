@@ -13,12 +13,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.Objects;
 
 
 public class UserPanelController {
     private User user;
     private UserPanel panel;
-    private AvisDaoImpl avisDao= new AvisDaoImpl();
+    private AvisDaoImpl avisDao = new AvisDaoImpl();
 
 
     public UserPanelController(User user, UserPanel panel) {
@@ -31,40 +32,76 @@ public class UserPanelController {
     }
 
     private void chargerHistorique() {
-        try (Connection conn = JdbcDataSource.getConnection()) {
-            String query = """
-                SELECT p.id AS commande_id, 
-                       prod.nom AS produit,
-                       IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
-                          FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
-                          ep.quantite * prod.prix
-                       ) AS prix_total
-                FROM panier p
-                LEFT JOIN element_panier ep ON p.id = ep.panier_id
-                LEFT JOIN produit prod ON ep.produit_id = prod.id
-                LEFT JOIN reduction r ON prod.id = r.produit_id
-                WHERE p.utilisateur_id = ?
-            """;
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setInt(1, user.getId());
-            ResultSet rs = stmt.executeQuery();
+        if (this.user!=null&&!Objects.equals(user.getRole(), "CLIENT")) {
+            try (Connection conn = JdbcDataSource.getConnection()) {
+                String query = """
+                            SELECT p.id AS commande_id, 
+                                   prod.nom AS produit,
+                                   IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
+                                      FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
+                                      ep.quantite * prod.prix
+                                   ) AS prix_total
+                            FROM panier p
+                            LEFT JOIN element_panier ep ON p.id = ep.panier_id
+                            LEFT JOIN produit prod ON ep.produit_id = prod.id
+                            LEFT JOIN reduction r ON prod.id = r.produit_id """;
+                PreparedStatement stmt = conn.prepareStatement(query);
+                ResultSet rs = stmt.executeQuery();
 
-            DefaultTableModel model = panel.getTableModel();
-            model.setRowCount(0);
+                DefaultTableModel model = panel.getTableModel();
+                model.setRowCount(0);
 
-            while (rs.next()) {
-                int id = rs.getInt("commande_id");
-                String produit = rs.getString("produit");
-                double prix = rs.getDouble("prix_total");
+                while (rs.next()) {
+                    int id = rs.getInt("commande_id");
+                    String produit = rs.getString("produit");
+                    double prix = rs.getDouble("prix_total");
 
-                model.addRow(new Object[]{
-                        "Commande " + id,
-                        produit,
-                        String.format("%.2f €", prix)
-                });
+                    model.addRow(new Object[]{
+                            "Commande " + id,
+                            produit,
+                            String.format("%.2f €", prix)
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else {
+            try (Connection conn = JdbcDataSource.getConnection()) {
+                String query = """
+                            SELECT p.id AS commande_id, 
+                                   prod.nom AS produit,
+                                   IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
+                                      FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
+                                      ep.quantite * prod.prix
+                                   ) AS prix_total
+                            FROM panier p
+                            LEFT JOIN element_panier ep ON p.id = ep.panier_id
+                            LEFT JOIN produit prod ON ep.produit_id = prod.id
+                            LEFT JOIN reduction r ON prod.id = r.produit_id
+                            WHERE p.utilisateur_id = ?
+                        """;
+                PreparedStatement stmt = conn.prepareStatement(query);
+                stmt.setInt(1, user.getId());
+                ResultSet rs = stmt.executeQuery();
+
+                DefaultTableModel model = panel.getTableModel();
+                model.setRowCount(0);
+
+                while (rs.next()) {
+                    int id = rs.getInt("commande_id");
+                    String produit = rs.getString("produit");
+                    double prix = rs.getDouble("prix_total");
+
+                    model.addRow(new Object[]{
+                            "Commande " + id,
+                            produit,
+                            String.format("%.2f €", prix)
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -95,18 +132,18 @@ public class UserPanelController {
 
         try (Connection conn = JdbcDataSource.getConnection()) {
             String query = """
-                SELECT prod.nom AS produit, ep.quantite, 
-                       prod.prix AS prix_unitaire, 
-                       r.nom AS reduction_nom, r.quantite_vrac, r.prix_vrac,
-                       IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac,
-                          FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix,
-                          ep.quantite * prod.prix
-                       ) AS sous_total
-                FROM element_panier ep
-                JOIN produit prod ON ep.produit_id = prod.id
-                LEFT JOIN reduction r ON prod.id = r.produit_id
-                WHERE ep.panier_id = ?
-            """;
+                        SELECT prod.nom AS produit, ep.quantite, 
+                               prod.prix AS prix_unitaire, 
+                               r.nom AS reduction_nom, r.quantite_vrac, r.prix_vrac,
+                               IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac,
+                                  FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix,
+                                  ep.quantite * prod.prix
+                               ) AS sous_total
+                        FROM element_panier ep
+                        JOIN produit prod ON ep.produit_id = prod.id
+                        LEFT JOIN reduction r ON prod.id = r.produit_id
+                        WHERE ep.panier_id = ?
+                    """;
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setInt(1, commandeId);
             ResultSet rs = stmt.executeQuery();
@@ -171,11 +208,15 @@ public class UserPanelController {
         JLabel nomProduit = new JLabel(produitNom);
         JTextArea descArea = new JTextArea(5, 20);
         JPanel avisPanel = new JPanel(new GridLayout(0, 2));
-        avisPanel.add(new JLabel("Produit :")); avisPanel.add(nomProduit);
+        avisPanel.add(new JLabel("Produit :"));
+        avisPanel.add(nomProduit);
 
-        avisPanel.add(new JLabel("Titre :")); avisPanel.add(titreField);
-        avisPanel.add(new JLabel("Note (1-5) :")); avisPanel.add(noteField);
-        avisPanel.add(new JLabel("Description :")); avisPanel.add(new JScrollPane(descArea));
+        avisPanel.add(new JLabel("Titre :"));
+        avisPanel.add(titreField);
+        avisPanel.add(new JLabel("Note (1-5) :"));
+        avisPanel.add(noteField);
+        avisPanel.add(new JLabel("Description :"));
+        avisPanel.add(new JScrollPane(descArea));
 
         int result = JOptionPane.showConfirmDialog(panel, avisPanel, "Ajouter un avis", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
@@ -190,7 +231,7 @@ public class UserPanelController {
             }
 
             String desc = descArea.getText();
-            Avis avis= new Avis(0,titre,note,desc,produitId,user.getId());
+            Avis avis = new Avis(0, titre, note, desc, produitId, user.getId());
             avisDao.ajouter(avis);
 
         }

@@ -1,5 +1,6 @@
 package Controleur;
 
+import Dao.AdminMarqueDaoImpl;
 import Dao.JdbcDataSource;
 import Dao.PanierDAO;
 import Dao.ProduitDAO;
@@ -28,7 +29,7 @@ public class CategoriesController {
 
         String query = fetchAll ?
                 "SELECT * FROM produit" :
-                "SELECT * FROM produit WHERE nom LIKE ? OR category LIKE ?";
+                "SELECT * FROM produit WHERE nom LIKE ? OR category LIKE ?  ";
 
         try (Connection connection = JdbcDataSource.getConnection();
              PreparedStatement ps = connection.prepareStatement(query)) {
