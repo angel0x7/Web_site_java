@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : dim. 27 avr. 2025 à 11:59
+-- Généré le : dim. 27 avr. 2025 à 19:12
 -- Version du serveur : 8.0.41
 -- Version de PHP : 8.3.14
 
@@ -69,55 +69,16 @@ CREATE TABLE IF NOT EXISTS `element_panier` (
   PRIMARY KEY (`id`),
   KEY `fk_element_panier` (`panier_id`),
   KEY `fk_produit_panier` (`produit_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=120 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `element_panier`
 --
 
 INSERT INTO `element_panier` (`id`, `quantite`, `produit_id`, `panier_id`) VALUES
-(29, 1, 1, 13),
-(38, 3, 6, 16),
-(48, 1, 9, 18),
-(27, 1, 3, 12),
-(35, 1, 3, 15),
-(32, 1, 3, 14),
-(33, 1, 1, 14),
-(34, 1, 2, 14),
-(36, 1, 1, 15),
-(53, 2, 10, 19),
-(49, 1, 6, 18),
-(62, 1, 3, 20),
-(43, 1, 2, 17),
-(44, 1, 9, 17),
-(45, 1, 4, 17),
-(46, 3, 6, 17),
-(61, 1, 3, 11),
-(50, 2, 10, 18),
-(52, 3, 6, 19),
-(60, 1, 7, 11),
-(63, 2, 7, 20),
-(78, 1, 8, 26),
-(98, 2, 8, 35),
-(67, 1, 4, 22),
-(70, 1, 3, 23),
-(71, 1, 7, 23),
-(72, 1, 7, 24),
-(75, 1, 6, 25),
-(76, 1, 7, 25),
-(80, 1, 5, 27),
-(82, 1, 5, 28),
-(84, 1, 5, 29),
-(86, 1, 5, 30),
-(88, 1, 5, 31),
-(90, 1, 7, 32),
-(92, 1, 8, 33),
-(99, 1, 5, 21),
-(95, 1, 6, 34),
-(96, 1, 8, 34),
-(100, 1, 6, 0),
-(101, 1, 1, 36),
-(102, 1, 2, 36);
+(118, 1, 5, 41),
+(117, 1, 6, 41),
+(119, 1, 2, 42);
 
 -- --------------------------------------------------------
 
@@ -156,41 +117,18 @@ CREATE TABLE IF NOT EXISTS `panier` (
   `id` int NOT NULL AUTO_INCREMENT,
   `utilisateur_id` int NOT NULL,
   `taille` int NOT NULL,
+  `etat` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_users` (`utilisateur_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `panier`
 --
 
-INSERT INTO `panier` (`id`, `utilisateur_id`, `taille`) VALUES
-(11, 87, 2),
-(12, 87, 1),
-(13, 87, 1),
-(14, 87, 3),
-(15, 87, 2),
-(16, 87, 1),
-(17, 87, 4),
-(18, 87, 3),
-(19, 87, 2),
-(20, 87, 2),
-(21, 89, 2),
-(22, 2, 1),
-(23, 89, 2),
-(24, 89, 1),
-(25, 89, 2),
-(26, 89, 1),
-(27, 89, 1),
-(28, 89, 1),
-(29, 89, 1),
-(30, 89, 1),
-(31, 89, 1),
-(32, 89, 1),
-(33, 89, 1),
-(34, 89, 2),
-(35, 89, 1),
-(36, 90, 2);
+INSERT INTO `panier` (`id`, `utilisateur_id`, `taille`, `etat`) VALUES
+(42, 89, 1, 0),
+(41, 89, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -217,13 +155,13 @@ CREATE TABLE IF NOT EXISTS `produit` (
 --
 
 INSERT INTO `produit` (`id`, `nom`, `image`, `marque_id`, `prix`, `quantite`, `description`, `category`) VALUES
-(1, 'Iphone', 'iphone.png', 1, 1984, 5, 'tel taxé', 'telephones'),
+(1, 'Iphone', 'iphone.png', 1, 1984, 4, 'tel taxé', 'telephones'),
 (2, 'Samsung', 'telsamsung.png', 2, 500, 5, 'android', 'telephones'),
 (4, 'Macbook Air M1', 'macbook.png', 1, 1200, 10, 'Ordinateur portable léger', 'ordinateurs'),
 (5, 'Xiaomi Redmi Note 12', 'redmi.png', 5, 300, 50, 'Smartphone milieu de gamme', 'telephones'),
 (6, 'Nintendo Switch', 'switch.png', 4, 350, 20, 'Console de jeu portable', 'consoles'),
-(7, 'TV Samsung 50’’ 4K', 'tv.png', 2, 600, 15, 'Télévision Smart 50 pouces', 'autres'),
-(8, 'Casque Sony WH1000XM4', 'casque.png', 3, 400, 30, 'Casque réduction de bruit', 'accessoires'),
+(7, 'TV Samsung 50’’ 4K', 'tv.png', 2, 600, 5, 'Télévision Smart 50 pouces', 'autres'),
+(8, 'Casque Sony WH1000XM4', 'casque.png', 3, 400, 29, 'Casque réduction de bruit', 'accessoires'),
 (9, 'Trottinette Xiaomi Pro', 'trot.png', 5, 500, 20, 'Trottinette électrique', 'autres'),
 (10, 'PlayStation 5', 'ps5.png', 3, 550, 25, 'Console de nouvelle génération', 'consoles'),
 (11, 'Samsung Galaxy Tab S9 FE Tablette', 'tabletteSamsung.png', 2, 500, 200, 'Tablette Samsung', 'autres'),

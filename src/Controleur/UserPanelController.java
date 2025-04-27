@@ -32,19 +32,22 @@ public class UserPanelController {
     }
 
     private void chargerHistorique() {
-        if (this.user!=null&&!Objects.equals(user.getRole(), "CLIENT")) {
+        if (this.user != null && !Objects.equals(user.getRole(), "CLIENT")) {
+            // Admin ou autre
             try (Connection conn = JdbcDataSource.getConnection()) {
                 String query = """
-                            SELECT p.id AS commande_id, 
-                                   prod.nom AS produit,
-                                   IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
-                                      FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
-                                      ep.quantite * prod.prix
-                                   ) AS prix_total
-                            FROM panier p
-                            LEFT JOIN element_panier ep ON p.id = ep.panier_id
-                            LEFT JOIN produit prod ON ep.produit_id = prod.id
-                            LEFT JOIN reduction r ON prod.id = r.produit_id """;
+                    SELECT p.id AS commande_id, 
+                           prod.nom AS produit,
+                           IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
+                              FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
+                              ep.quantite * prod.prix
+                           ) AS prix_total
+                    FROM panier p
+                    LEFT JOIN element_panier ep ON p.id = ep.panier_id
+                    LEFT JOIN produit prod ON ep.produit_id = prod.id
+                    LEFT JOIN reduction r ON prod.id = r.produit_id
+                    WHERE p.etat = 1
+                    """;
                 PreparedStatement stmt = conn.prepareStatement(query);
                 ResultSet rs = stmt.executeQuery();
 
@@ -66,20 +69,21 @@ public class UserPanelController {
                 e.printStackTrace();
             }
         } else {
+            // Client
             try (Connection conn = JdbcDataSource.getConnection()) {
                 String query = """
-                            SELECT p.id AS commande_id, 
-                                   prod.nom AS produit,
-                                   IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
-                                      FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
-                                      ep.quantite * prod.prix
-                                   ) AS prix_total
-                            FROM panier p
-                            LEFT JOIN element_panier ep ON p.id = ep.panier_id
-                            LEFT JOIN produit prod ON ep.produit_id = prod.id
-                            LEFT JOIN reduction r ON prod.id = r.produit_id
-                            WHERE p.utilisateur_id = ?
-                        """;
+                    SELECT p.id AS commande_id, 
+                           prod.nom AS produit,
+                           IF(r.quantite_vrac > 0 AND ep.quantite >= r.quantite_vrac, 
+                              FLOOR(ep.quantite / r.quantite_vrac) * r.prix_vrac + (ep.quantite % r.quantite_vrac) * prod.prix, 
+                              ep.quantite * prod.prix
+                           ) AS prix_total
+                    FROM panier p
+                    LEFT JOIN element_panier ep ON p.id = ep.panier_id
+                    LEFT JOIN produit prod ON ep.produit_id = prod.id
+                    LEFT JOIN reduction r ON prod.id = r.produit_id
+                    WHERE p.etat = 1 AND p.utilisateur_id = ?
+                    """;
                 PreparedStatement stmt = conn.prepareStatement(query);
                 stmt.setInt(1, user.getId());
                 ResultSet rs = stmt.executeQuery();
@@ -101,9 +105,9 @@ public class UserPanelController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
+
 
     public void afficherDetailsCommande() {
         JTable table = panel.getHistoriqueTable();

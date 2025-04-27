@@ -39,11 +39,12 @@ public class PanierController {
 
         try (Connection connection = JdbcDataSource.getConnection()) {
             String query = """
-                SELECT ep.produit_id, p.nom, p.prix, ep.quantite
-                FROM element_panier ep
-                JOIN produit p ON ep.produit_id = p.id
-                WHERE ep.panier_id = ?
-            """;
+            SELECT ep.produit_id, p.nom, p.prix, ep.quantite
+            FROM element_panier ep
+            JOIN produit p ON ep.produit_id = p.id
+            JOIN panier pa ON ep.panier_id = pa.id
+            WHERE ep.panier_id = ? AND pa.etat = 0
+        """;
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setInt(1, currentUser.getPanierId());
             ResultSet rs = stmt.executeQuery();
@@ -54,7 +55,7 @@ public class PanierController {
                 double prix = rs.getDouble("prix");
                 int quantite = rs.getInt("quantite");
 
-                Produit produit = new Produit(id, nom, "", quantite, prix, "", "", 0);
+                Produit produit = new Produit(id, nom, "", 0, prix, "", "", 0); // quantite à 0 ici
                 produitsPanier.add(produit);
                 quantitesPanier.add(quantite);
             }
@@ -65,6 +66,7 @@ public class PanierController {
             JOptionPane.showMessageDialog(vue, "Erreur lors du chargement du panier.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private void afficherProduits() {
         JPanel produitsPanel = vue.getProduitsPanel();
@@ -228,12 +230,18 @@ public class PanierController {
         if (afficherFormulaireLivraison() && afficherFormulairePaiement()) {
             afficherConfirmationCommande();
 
+
             try (Connection connection = JdbcDataSource.getConnection()) {
                 connection.setAutoCommit(false);
+                String updatePanierQuery = "UPDATE panier SET etat = 1 WHERE etat = 0 AND utilisateur_id = ?";
+                try (PreparedStatement updatePanierStmt = connection.prepareStatement(updatePanierQuery)) {
+                    updatePanierStmt.setInt(1, currentUser.getId());
+                    updatePanierStmt.executeUpdate();
+                }
 
                 //On crée le nouveau panier
                 int nouveauPanierId = -1;
-                String insertPanierQuery = "INSERT INTO panier (utilisateur_id, taille) VALUES (?, ?)";
+                String insertPanierQuery = "INSERT INTO panier (utilisateur_id, taille,etat) VALUES (?, ?,0)";
                 try (PreparedStatement insertPanierStmt = connection.prepareStatement(insertPanierQuery, Statement.RETURN_GENERATED_KEYS)) {
                     insertPanierStmt.setInt(1, currentUser.getId());
                     insertPanierStmt.setInt(2, produitsPanier.size());
@@ -268,16 +276,8 @@ public class PanierController {
                     insertElemStmt.executeBatch();
                     updateStockStmt.executeBatch();
                 }
-
-                //  On commit la transaction
                 connection.commit();
 
-                // On vide l'affichage et l'ancien panier
-                String deleteOldPanier = "DELETE FROM element_panier WHERE panier_id = ?";
-                try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanier)) {
-                    deleteStmt.setInt(1, currentUser.getPanierId());
-                    deleteStmt.executeUpdate();
-                }
 
                 produitsPanier.clear();
                 quantitesPanier.clear();
