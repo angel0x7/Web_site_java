@@ -22,7 +22,7 @@ public class AdminReductionVue extends JPanel {
 
     public AdminReductionVue(AdminReductionDaoImpl reductionDao) {
         this.reductionDao = reductionDao;
-        this.produitDao = new AdminProduitDaoImpl(reductionDao.getDaoFactory());
+        this.produitDao = new AdminProduitDaoImpl();
 
         setLayout(new BorderLayout());
 
@@ -129,7 +129,7 @@ public class AdminReductionVue extends JPanel {
         JTextField txtQuantite = new JTextField(reduction != null ? String.valueOf(reduction.getQuantite_vrac()) : "");
 
         // Récupère tous les produits pour le menu déroulant
-        AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl(reductionDao.getDaoFactory());
+        AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl();
         ArrayList<Produit> produits = produitDao.getAll();
 
         JComboBox<String> comboProduits = new JComboBox<>();

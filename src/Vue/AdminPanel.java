@@ -52,7 +52,7 @@ public class AdminPanel extends JPanel {
         daoFactory = new DaoFactory("jdbc:mysql://localhost:3306/shopping", "root", "");
 
         AdminMarqueVue marqueVue = new AdminMarqueVue(new AdminMarqueDaoImpl(daoFactory));
-        AdminProduitVue produitVue = new AdminProduitVue(new AdminProduitDaoImpl(daoFactory));
+        AdminProduitVue produitVue = new AdminProduitVue(new AdminProduitDaoImpl());
         AdminReductionVue reductionVue = new AdminReductionVue(new AdminReductionDaoImpl(daoFactory));
         JPanel topSellingPanel = createTopSellingPanel();
 
@@ -96,7 +96,7 @@ public class AdminPanel extends JPanel {
     }
 
     private JPanel createTopSellingPanel() {
-        AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl(daoFactory);
+        AdminProduitDaoImpl produitDao = new AdminProduitDaoImpl();
         List<Map.Entry<String, Integer>> topSellingProducts = produitDao.getTopSellingProducts();
 
         topSellingProducts.sort((entry1, entry2) -> Integer.compare(entry2.getValue(), entry1.getValue()));

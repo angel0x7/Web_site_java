@@ -65,7 +65,7 @@ public class DaoFactory {
      */
     public AdminProduitDao getAdminProduitDAO() {
         // Retourner un objet de ProduitDAOImpl qui implémente ProduitDAO
-        return new AdminProduitDaoImpl(this);
+        return new AdminProduitDaoImpl();
     }
 
     /**

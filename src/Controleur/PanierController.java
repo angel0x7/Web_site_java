@@ -1,5 +1,6 @@
 package Controleur;
 
+import Dao.AdminProduitDaoImpl;
 import Dao.JdbcDataSource;
 import Dao.ProduitDAO;
 import Modele.Produit;
@@ -122,6 +123,7 @@ public class PanierController {
             decrementButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
             decrementButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
             decrementButton.addActionListener(e -> {
+                // Vérifier si la quantité est supérieure à 1 et si la quantité en stock est suffisante
                 if (quantitesPanier.get(finalI) > 1) {
                     quantitesPanier.set(finalI, quantitesPanier.get(finalI) - 1);
                     modifierQuantiteDansDB(produitsPanier.get(finalI).getIdProduit(), quantitesPanier.get(finalI));
@@ -138,9 +140,19 @@ public class PanierController {
             incrementButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
             incrementButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
             incrementButton.addActionListener(e -> {
-                quantitesPanier.set(finalI, quantitesPanier.get(finalI) + 1);
-                modifierQuantiteDansDB(produitsPanier.get(finalI).getIdProduit(), quantitesPanier.get(finalI));
-                afficherProduits();
+                int idProduit = produit.getIdProduit();
+                AdminProduitDaoImpl adminProduitDaoImpl = new AdminProduitDaoImpl();
+                Produit produitBDD =adminProduitDaoImpl.getById(idProduit);
+
+                int stockDisponible = produitBDD.getQuantite();  // Quantité en stock du produit
+                int quantiteActuelle = quantitesPanier.get(finalI);
+                if (quantiteActuelle < stockDisponible) {
+                    quantitesPanier.set(finalI, quantiteActuelle + 1);
+                    modifierQuantiteDansDB(produitsPanier.get(finalI).getIdProduit(), quantitesPanier.get(finalI));
+                    afficherProduits();
+                } else {
+                    JOptionPane.showMessageDialog(vue, "Quantité en stock insuffisante.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
             });
 
             quantitePanel.add(decrementButton);
@@ -194,6 +206,7 @@ public class PanierController {
         vue.getTotalLabel().setText("Total : " + calculerTotal() + "€");
     }
 
+
     private void modifierQuantiteDansDB(int produitId, int nouvelleQuantite) {
         try (Connection connection = JdbcDataSource.getConnection()) {
             String query = "UPDATE element_panier SET quantite = ? WHERE produit_id = ? AND panier_id = ?";
@@ -212,49 +225,56 @@ public class PanierController {
             JOptionPane.showMessageDialog(vue, "Votre panier est vide !", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (afficherFormulaireLivraison()&&afficherFormulairePaiement()) {
+        if (afficherFormulaireLivraison() && afficherFormulairePaiement()) {
             afficherConfirmationCommande();
 
             try (Connection connection = JdbcDataSource.getConnection()) {
                 connection.setAutoCommit(false);
 
+                // 1) On crée le nouveau panier
                 int nouveauPanierId = -1;
                 String insertPanierQuery = "INSERT INTO panier (utilisateur_id, taille) VALUES (?, ?)";
-                try (PreparedStatement insertPanierStmt = connection.prepareStatement(insertPanierQuery, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                try (PreparedStatement insertPanierStmt = connection.prepareStatement(insertPanierQuery, Statement.RETURN_GENERATED_KEYS)) {
                     insertPanierStmt.setInt(1, currentUser.getId());
                     insertPanierStmt.setInt(2, produitsPanier.size());
                     insertPanierStmt.executeUpdate();
-
-                    ResultSet generatedKeys = insertPanierStmt.getGeneratedKeys();
-                    if (generatedKeys.next()) {
-                        nouveauPanierId = generatedKeys.getInt(1);
+                    try (ResultSet keys = insertPanierStmt.getGeneratedKeys()) {
+                        if (keys.next()) nouveauPanierId = keys.getInt(1);
                     }
                 }
+                if (nouveauPanierId == -1) throw new SQLException("Impossible de récupérer l'ID du nouveau panier.");
 
-                if (nouveauPanierId == -1) {
-                    throw new SQLException("Erreur lors de la création du nouveau panier.");
-                }
+                // 2) On insère les éléments et on met à jour le stock
+                String insertElemQuery = "INSERT INTO element_panier (panier_id, produit_id, quantite) VALUES (?, ?, ?)";
+                String updateStockQuery = "UPDATE produit SET quantite = quantite - ? WHERE id = ?";
+                try (PreparedStatement insertElemStmt = connection.prepareStatement(insertElemQuery);
+                     PreparedStatement updateStockStmt = connection.prepareStatement(updateStockQuery)) {
 
-                String insertElementPanierQuery = """
-                INSERT INTO element_panier (panier_id, produit_id, quantite)
-                VALUES (?, ?, ?)""";
-
-                try (PreparedStatement insertElementStmt = connection.prepareStatement(insertElementPanierQuery)) {
                     for (int i = 0; i < produitsPanier.size(); i++) {
                         Produit produit = produitsPanier.get(i);
-                        int quantite = quantitesPanier.get(i);
-                        insertElementStmt.setInt(1, nouveauPanierId);
-                        insertElementStmt.setInt(2, produit.getIdProduit());
-                        insertElementStmt.setInt(3, quantite);
-                        insertElementStmt.addBatch();
+                        int qty = quantitesPanier.get(i);
+
+                        // ajout au panier
+                        insertElemStmt.setInt(1, nouveauPanierId);
+                        insertElemStmt.setInt(2, produit.getIdProduit());
+                        insertElemStmt.setInt(3, qty);
+                        insertElemStmt.addBatch();
+
+                        // mise à jour du stock
+                        updateStockStmt.setInt(1, qty);
+                        updateStockStmt.setInt(2, produit.getIdProduit());
+                        updateStockStmt.addBatch();
                     }
-                    insertElementStmt.executeBatch();
+                    insertElemStmt.executeBatch();
+                    updateStockStmt.executeBatch();
                 }
 
+                // 3) On commit la transaction
                 connection.commit();
 
-                String deleteOldPanierQuery = "DELETE FROM element_panier WHERE panier_id = ?";
-                try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanierQuery)) {
+                // 4) On vide l'affichage et l'ancien panier
+                String deleteOldPanier = "DELETE FROM element_panier WHERE panier_id = ?";
+                try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanier)) {
                     deleteStmt.setInt(1, currentUser.getPanierId());
                     deleteStmt.executeUpdate();
                 }
@@ -265,15 +285,19 @@ public class PanierController {
                 vue.getTotalLabel().setText("Total : 0.0€");
                 vue.getProduitsPanel().repaint();
 
+                JOptionPane.showMessageDialog(vue, "Commande passée avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
+
             } catch (SQLException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(vue, "Erreur lors du passage de la commande.", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
-        }
-        if (vue.getUserPanel() != null) {
-            vue.getUserPanel().refreshPage();
+
+            if (vue.getUserPanel() != null) {
+                vue.getUserPanel().refreshPage();
+            }
         }
     }
+
 
     private double calculerTotal() {
         double total = 0;

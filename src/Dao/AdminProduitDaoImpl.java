@@ -13,10 +13,9 @@ import java.util.Map;
  * ProduitDao.
  */
 public class AdminProduitDaoImpl implements AdminProduitDao {
-    private DaoFactory daoFactory;
 
-    public AdminProduitDaoImpl(DaoFactory daoFactory) {
-        this.daoFactory = daoFactory;
+    public AdminProduitDaoImpl() {
+
     }
 
     @Override
@@ -32,7 +31,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         */
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();;
+            Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
             // récupération des produits de la base de données avec la requete SELECT
@@ -75,7 +74,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     public void ajouter(Produit product) {
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();
+            Connection connexion = JdbcDataSource.getConnection();
             // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "insert into produit(nom,image,marque_id,prix,quantite,description,category) values('" + product.getNomProduit() + "','" +
@@ -95,7 +94,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         Produit product = null;
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();;
+            Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
             // Exécution de la requête SELECT pour récupérer le produit de l'id dans la base de données
@@ -133,7 +132,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         int idProduit = -1;
         String sql = "SELECT id FROM produit WHERE nom = ?";
 
-        try (Connection conn = daoFactory.getConnection();
+        try (Connection conn = JdbcDataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, nomProduit);
@@ -154,7 +153,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         Produit old_produit = getById(product.getIdProduit());
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();
+            Connection connexion = JdbcDataSource.getConnection();
 
             // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
@@ -177,7 +176,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     public void supprimer(int idProduct) {
         try {
             // connexion
-            Connection connexion = daoFactory.getConnection();
+            Connection connexion = JdbcDataSource.getConnection();
 
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "DELETE FROM produit WHERE id="+idProduct);
@@ -200,7 +199,7 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
                 "ORDER BY totalVendu ASC " + // Changer DESC en ASC pour l'ordre croissant
                 "LIMIT 10";
 
-        try (Connection conn = daoFactory.getConnection();
+        try (Connection conn = JdbcDataSource.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 
