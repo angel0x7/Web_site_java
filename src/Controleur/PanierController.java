@@ -284,9 +284,6 @@ public class PanierController {
                 vue.getProduitsPanel().removeAll();
                 vue.getTotalLabel().setText("Total : 0.0€");
                 vue.getProduitsPanel().repaint();
-
-                JOptionPane.showMessageDialog(vue, "Commande passée avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
-
             } catch (SQLException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(vue, "Erreur lors du passage de la commande.", "Erreur", JOptionPane.ERROR_MESSAGE);

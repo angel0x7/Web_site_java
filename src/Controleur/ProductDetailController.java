@@ -35,14 +35,21 @@ public class ProductDetailController {
                 }
 
                 // Vérifier si l'utilisateur est un administrateur
-                if (user.getRole().equals("ADMIN")) {
+                if ("ADMIN".equals(user.getRole())) {
                     JOptionPane.showMessageDialog(view, "Les administrateurs ne peuvent pas ajouter de produits au panier.", "Accès refusé", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                // Vérification du panierId existant
+                if (user.getPanierId() == -1) {
+                    JOptionPane.showMessageDialog(view, "Erreur : Panier non initialisé pour l'utilisateur.", "Erreur", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 // Ajouter l'élément au panier
                 PanierDAO panierDAO = new PanierDAO(connection);
-                int panierId = panierDAO.getOrCreatePanier(user.getId());
+                int panierId = user.getPanierId();
+
                 panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), selectedQuantity);
                 panierDAO.updatePanierTaille(panierId);
 
@@ -54,5 +61,4 @@ public class ProductDetailController {
             }
         };
     }
-
 }
