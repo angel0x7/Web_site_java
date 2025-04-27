@@ -57,9 +57,17 @@ public class ListeProduitsController {
             Connection connection = JdbcDataSource.getConnection();
             PanierDAO panierDAO = new PanierDAO(connection);
 
-            int panierId = panierDAO.getOrCreatePanier(currentUser.getId());
+            int panierId = currentUser.getPanierId();
+            if (panierId == -1) {
+                JOptionPane.showMessageDialog(vue,
+                        "Erreur : Panier non initialisé pour l'utilisateur.",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), 1);
             panierDAO.updatePanierTaille(panierId);
+
 
             JOptionPane.showMessageDialog(vue,
                     "Article ajouté : " + produit.getNomProduit(),
