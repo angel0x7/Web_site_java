@@ -11,10 +11,9 @@ import java.sql.*;
 import java.util.ArrayList;
 
 
-/**
- * implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
- * ProduitDao.
- */
+
+ //implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
+
 public class AvisDaoImpl implements AvisDao {
 
     public AvisDaoImpl() {
@@ -23,10 +22,7 @@ public class AvisDaoImpl implements AvisDao {
 
 
     @Override
-    /**
-     * Récupérer de la base de données tous les objets des produits dans une liste
-     * @return : liste retournée des objets des produits récupérés
-     */
+
     public ArrayList<Avis> getAll() {
         ArrayList<Avis> listeAvis = new  ArrayList<Avis>();
 
@@ -34,7 +30,6 @@ public class AvisDaoImpl implements AvisDao {
 
 
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
@@ -54,7 +49,6 @@ public class AvisDaoImpl implements AvisDao {
             }
         }
         catch (SQLException e) {
-            //traitement de l'exception
             e.printStackTrace();
             System.out.println("Extraction de la liste des avis impossible");
         }
@@ -67,7 +61,6 @@ public class AvisDaoImpl implements AvisDao {
     @Override
     public void ajouter(Avis avis) {
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "insert into avis(titre,note,description,produit_id,user_id) values('" + avis.getTitre() + "'," +
@@ -87,7 +80,6 @@ public class AvisDaoImpl implements AvisDao {
     public Avis getById(int id) {
         Avis avis = null;
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
@@ -95,7 +87,6 @@ public class AvisDaoImpl implements AvisDao {
             ResultSet resultats = statement.executeQuery("select * from avis where id="+id);
 
 
-            //  Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
             while (resultats.next()) {
                 int idAvis = resultats.getInt(1);
                 String titre = resultats.getString(2);
@@ -104,7 +95,6 @@ public class AvisDaoImpl implements AvisDao {
                 int produitId = resultats.getInt(5);
                 int userId = resultats.getInt(6);
                 if (id == idAvis) {
-                    // instanciation de l'objet de Produit avec ces 3 champs
                     avis = new Avis(id,titre,note,description,produitId,userId);
                     break;
                 }
@@ -122,7 +112,6 @@ public class AvisDaoImpl implements AvisDao {
     public ArrayList<Avis> getByUser(int idUser) {
         ArrayList<Avis> listeAvis = new  ArrayList<Avis>();
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
@@ -142,7 +131,6 @@ public class AvisDaoImpl implements AvisDao {
             }
         }
         catch (SQLException e) {
-            //traitement de l'exception
             e.printStackTrace();
             System.out.println("Extraction de la liste des avis impossible");
         }
@@ -154,7 +142,6 @@ public class AvisDaoImpl implements AvisDao {
     public ArrayList<Avis> getByProduit(int idProduit) {
         ArrayList<Avis> listeAvis = new  ArrayList<Avis>();
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
             ResultSet resultats = statement.executeQuery("select * from avis  where produit_id="+idProduit);
@@ -172,7 +159,6 @@ public class AvisDaoImpl implements AvisDao {
             }
         }
         catch (SQLException e) {
-            //traitement de l'exception
             e.printStackTrace();
             System.out.println("Extraction de la liste des avis impossible");
         }
@@ -185,7 +171,6 @@ public class AvisDaoImpl implements AvisDao {
     @Override
     public void supprimer(int idAvis) {
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();
 
 

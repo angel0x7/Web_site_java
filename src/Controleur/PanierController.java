@@ -231,7 +231,7 @@ public class PanierController {
             try (Connection connection = JdbcDataSource.getConnection()) {
                 connection.setAutoCommit(false);
 
-                // 1) On crée le nouveau panier
+                //On crée le nouveau panier
                 int nouveauPanierId = -1;
                 String insertPanierQuery = "INSERT INTO panier (utilisateur_id, taille) VALUES (?, ?)";
                 try (PreparedStatement insertPanierStmt = connection.prepareStatement(insertPanierQuery, Statement.RETURN_GENERATED_KEYS)) {
@@ -244,7 +244,7 @@ public class PanierController {
                 }
                 if (nouveauPanierId == -1) throw new SQLException("Impossible de récupérer l'ID du nouveau panier.");
 
-                // 2) On insère les éléments et on met à jour le stock
+                // On insère les éléments et on met à jour le stock
                 String insertElemQuery = "INSERT INTO element_panier (panier_id, produit_id, quantite) VALUES (?, ?, ?)";
                 String updateStockQuery = "UPDATE produit SET quantite = quantite - ? WHERE id = ?";
                 try (PreparedStatement insertElemStmt = connection.prepareStatement(insertElemQuery);
@@ -269,10 +269,10 @@ public class PanierController {
                     updateStockStmt.executeBatch();
                 }
 
-                // 3) On commit la transaction
+                //  On commit la transaction
                 connection.commit();
 
-                // 4) On vide l'affichage et l'ancien panier
+                // On vide l'affichage et l'ancien panier
                 String deleteOldPanier = "DELETE FROM element_panier WHERE panier_id = ?";
                 try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOldPanier)) {
                     deleteStmt.setInt(1, currentUser.getPanierId());
@@ -353,7 +353,6 @@ public class PanierController {
         titre.setHorizontalAlignment(SwingConstants.CENTER);
         livraisonPanel.add(titre, BorderLayout.NORTH);
 
-        // Centre : Formulaire
         JPanel adressePanel = new JPanel(new GridLayout(6, 2, 10, 10));
 
         adressePanel.add(new JLabel("Nom :"));
@@ -395,7 +394,6 @@ public class PanierController {
 
         livraisonPanel.add(adressePanel, BorderLayout.CENTER);
 
-        // Sud : Bouton valider
         JButton valider = new JButton("Valider l'adresse de livraison");
         valider.setBackground(new Color(255, 102, 0));
         valider.setForeground(Color.WHITE);
@@ -420,7 +418,6 @@ public class PanierController {
         titre.setHorizontalAlignment(SwingConstants.CENTER);
         paiementPanel.add(titre, BorderLayout.NORTH);
 
-        // Centre : Formulaire
         JPanel formulaire = new JPanel(new GridLayout(4, 2, 10, 10));
 
         formulaire.add(new JLabel("Nom du titulaire :"));
@@ -442,7 +439,6 @@ public class PanierController {
 
         paiementPanel.add(formulaire, BorderLayout.CENTER);
 
-        // Sud : Bouton valider
         JButton valider = new JButton("Valider le paiement");
         valider.setBackground(new Color(255, 102, 0));
         valider.setForeground(Color.WHITE);

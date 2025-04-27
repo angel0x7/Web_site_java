@@ -11,8 +11,8 @@ public class JdbcDataSource {
 
     private static Connection connection;
     private static final String URL = "jdbc:mysql://localhost:3306/shopping";
-    private static final String USER = "root";  // Remplacez par votre utilisateur MySQL
-    private static final String PASSWORD = "";  // Remplacez par votre mot de passe MySQL
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
 
     private JdbcDataSource() {
         try {
@@ -21,12 +21,12 @@ public class JdbcDataSource {
 
             // Connexion à la BDD
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("✅ Connexion réussie à la base de données.");
+            System.out.println(" Connexion réussie à la base de données.");
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ Driver MySQL non trouvé !");
+            System.err.println(" Driver MySQL non trouvé !");
             e.printStackTrace();
         } catch (SQLException e) {
-            System.err.println("❌ Erreur de connexion à la base de données !");
+            System.err.println(" Erreur de connexion à la base de données !");
             e.printStackTrace();
         }
     }
@@ -34,10 +34,10 @@ public class JdbcDataSource {
     public static Connection getConnection() {
         try {
             Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("✅ Connexion réussie à la base de données.");
+            System.out.println(" Connexion réussie à la base de données.");
             return conn;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur de connexion à la base de données : " + e.getMessage());
+            System.err.println(" Erreur de connexion à la base de données : " + e.getMessage());
             return null;
         }
     }
@@ -48,10 +48,10 @@ public class JdbcDataSource {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("✅ Connexion fermée.");
+                System.out.println(" Connexion fermée.");
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de la fermeture de la connexion !");
+            System.err.println(" Erreur lors de la fermeture de la connexion !");
             e.printStackTrace();
         }
     }
@@ -70,11 +70,11 @@ public class JdbcDataSource {
 
             int rowsInserted = pstmt.executeUpdate();
             if (rowsInserted > 0) {
-                System.out.println("✅ Client ajouté avec succès !");
+                System.out.println(" Client ajouté avec succès !");
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de l'insertion !");
+            System.err.println(" Erreur lors de l'insertion !");
             e.printStackTrace();
         }
     }
@@ -87,13 +87,13 @@ public class JdbcDataSource {
 
             int rowsDeleted = pstmt.executeUpdate();
             if (rowsDeleted > 0) {
-                System.out.println("✅ Client supprimé avec succès !");
+                System.out.println(" Client supprimé avec succès !");
             } else {
-                System.out.println("⚠️ Aucun client trouvé avec l'ID " + id);
+                System.out.println(" Aucun client trouvé avec l'ID " + id);
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de la suppression du client !");
+            System.err.println(" Erreur lors de la suppression du client !");
             e.printStackTrace();
         }
     }
@@ -115,7 +115,7 @@ public class JdbcDataSource {
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de la récupération des clients !");
+            System.err.println(" Erreur lors de la récupération des clients !");
             e.printStackTrace();
         }
     }
@@ -129,10 +129,10 @@ public class JdbcDataSource {
             pstmt.setString(4, myObj.toString());
             int rowsInserted = pstmt.executeUpdate();
             if (rowsInserted > 0) {
-                System.out.println("✅ Administrateur ajouté avec succès !");
+                System.out.println(" Administrateur ajouté avec succès !");
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de l'insertion de l'administrateur !");
+            System.err.println(" Erreur lors de l'insertion de l'administrateur !");
             e.printStackTrace();
         }
     }
@@ -153,7 +153,7 @@ public class JdbcDataSource {
             }
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de la récupération des administrateurs !");
+            System.err.println(" Erreur lors de la récupération des administrateurs !");
             e.printStackTrace();
         }
     }
@@ -168,7 +168,7 @@ public class JdbcDataSource {
             return rs.next(); // Retourne true si un admin est trouvé
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors de l'authentification de l'administrateur !");
+            System.err.println(" Erreur lors de l'authentification de l'administrateur !");
             e.printStackTrace();
             return false;
         }
@@ -192,9 +192,9 @@ public class JdbcDataSource {
         try {
             conn = JdbcDataSource.getConnection();
 
-            // ✅ Vérification de la connexion
+            //  Vérification de la connexion
             if (conn == null || conn.isClosed()) {
-                System.err.println("❌ Connexion à la base de données indisponible !");
+                System.err.println(" Connexion à la base de données indisponible !");
                 return null;
             }
 
@@ -237,20 +237,19 @@ public class JdbcDataSource {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();  // Affichage d'erreurs SQL
+            e.printStackTrace();
         } finally {
             try {
                 if (rsClient != null) rsClient.close();
                 if (rsAdmin != null) rsAdmin.close();
                 if (pstmtClient != null) pstmtClient.close();
                 if (pstmtAdmin != null) pstmtAdmin.close();
-                if (conn != null) conn.close();  // ✅ Fermeture de la connexion après utilisation
+                if (conn != null) conn.close();  //  Fermeture de la connexion après utilisation
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
 
-        // Aucun utilisateur trouvé
         return null;
     }
 

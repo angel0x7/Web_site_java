@@ -8,10 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
- * ProduitDao.
- */
+
 public class AdminProduitDaoImpl implements AdminProduitDao {
 
     public AdminProduitDaoImpl() {
@@ -19,22 +16,18 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     }
 
     @Override
-    /**
-     * Récupérer de la base de données tous les objets des produits dans une liste
-     * @return : liste retournée des objets des produits récupérés
-     */
+
     public ArrayList<Produit> getAll() {
         ArrayList<Produit> listeProduits = new  ArrayList<Produit>();
 
-        /*
-            Récupérer la liste des produits de la base de données dans listeProduits
-        */
+
+            //Récupérer la liste des produits de la base de données dans listeProduits
+
         try {
-            // connexion
+
             Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
-            // récupération des produits de la base de données avec la requete SELECT
             ResultSet resultats = statement.executeQuery("select * from produit");
 
             // 	Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
@@ -53,7 +46,6 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
                 // instancier un objet de Produit avec ces 3 champs en paramètres
                 Produit product = new Produit(idProduit,produitNom,description,quantite,prix,image,categorie,idImage);
 
-                // ajouter ce produit à listeProduits
                 listeProduits.add(product);
             }
         }
@@ -67,10 +59,9 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     }
 
     @Override
-    /**
-     Ajouter un nouveau produit en paramètre dans la base de données
-     @params : product = objet du Produit en paramètre à insérer dans la base de données
-     */
+
+     //Ajouter un nouveau produit en paramètre dans la base de données
+
     public void ajouter(Produit product) {
         try {
             // connexion
@@ -93,17 +84,13 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     public Produit getById(int id) {
         Produit product = null;
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();;
             Statement statement = connexion.createStatement();
 
-            // Exécution de la requête SELECT pour récupérer le produit de l'id dans la base de données
             ResultSet resultats = statement.executeQuery("select * from produit where id="+id);
 
-            // 	Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
             while (resultats.next()) {
-                // récupérer les 3 champs de la table produits dans la base de données
-                // récupération des 3 champs du produit de la base de données
+
                 int idProduit = resultats.getInt(1);
                 String produitNom = resultats.getString(2);
                 String image = resultats.getString(3);
@@ -152,10 +139,8 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     public Produit modifier(Produit product) {
         Produit old_produit = getById(product.getIdProduit());
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();
 
-            // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "UPDATE produit SET nom='"+product.getNomProduit()+
                             "',prix="+product.getPrix()+",image='"+product.getImage()+
@@ -175,7 +160,6 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
     @Override
     public void supprimer(int idProduct) {
         try {
-            // connexion
             Connection connexion = JdbcDataSource.getConnection();
 
             PreparedStatement preparedStatement = connexion.prepareStatement(
@@ -188,15 +172,14 @@ public class AdminProduitDaoImpl implements AdminProduitDao {
         }
 
     }
-    // Dans AdminProduitDaoImpl.java
-    // Dans AdminProduitDaoImpl.java
+
     public List<Map.Entry<String, Integer>> getTopSellingProducts() {
         Map<String, Integer> topSellingProducts = new HashMap<>();
         String query = "SELECT p.nom, SUM(ep.quantite) as totalVendu " +
                 "FROM element_panier ep " +
                 "JOIN produit p ON ep.produit_id = p.id " +
                 "GROUP BY p.nom " +
-                "ORDER BY totalVendu ASC " + // Changer DESC en ASC pour l'ordre croissant
+                "ORDER BY totalVendu ASC " +
                 "LIMIT 10";
 
         try (Connection conn = JdbcDataSource.getConnection();

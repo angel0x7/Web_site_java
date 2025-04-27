@@ -8,10 +8,9 @@ import Modele.Reduction;
 import java.sql.*;
 import java.util.ArrayList;
 
-/**
- * implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
- * ProduitDao.
- */
+
+ //implémentation MySQL du stockage dans la base de données des méthodes définies dans l'interface
+
 public class AdminReductionDaoImpl implements AdminReductionDao {
     public DaoFactory getDaoFactory() {
         return daoFactory;
@@ -24,10 +23,9 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
     }
 
     @Override
-    /**
-     * Récupérer de la base de données tous les objets des produits dans une liste
-     * @return : liste retournée des objets des produits récupérés
-     */
+
+     //Récupérer de la base de données tous les objets des produits dans une liste
+
     public ArrayList<Reduction> getAll() {
         ArrayList<Reduction> listeReductions = new  ArrayList<Reduction>();
 
@@ -35,16 +33,12 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
             Récupérer la liste des reductions de la base de données dans listeProduits
         */
         try {
-            // connexion
             Connection connexion = daoFactory.getConnection();;
             Statement statement = connexion.createStatement();
 
-            // récupération des produits de la base de données avec la requete SELECT
             ResultSet resultats = statement.executeQuery("select * from reduction");
 
-            // 	Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
             while (resultats.next()) {
-                // récupérer les 3 champs de la table produits dans la base de données
                 int idReduction = resultats.getInt(1);
                 String nomReduction = resultats.getString(2);
                 double prix_vrac = resultats.getDouble(4);
@@ -54,12 +48,10 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
                 // instancier un objet de Produit avec ces 3 champs en paramètres
                 Reduction reduction = new Reduction(idReduction,nomReduction,quantite_vrac,prix_vrac,produit_id);
 
-                // ajouter ce produit à listeProduits
                 listeReductions.add(reduction);
             }
         }
         catch (SQLException e) {
-            //traitement de l'exception
             e.printStackTrace();
             System.out.println("Extraction de la liste de reductions impossible");
         }
@@ -68,15 +60,12 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
     }
 
     @Override
-    /**
-     Ajouter un nouveau produit en paramètre dans la base de données
-     @params : product = objet du Produit en paramètre à insérer dans la base de données
-     */
+
+     //Ajouter un nouveau produit en paramètre dans la base de données
+
     public void ajouter(Reduction reduction) {
         try {
-            // connexion
             Connection connexion = daoFactory.getConnection();
-            // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "insert into reduction(nom,prix_vrac,produit_id,quantite_vrac) values('" + reduction.getNom() + "'," +
                              reduction.getPrix_vrac() + "," + reduction.getProduit_id() + "," + reduction.getQuantite_vrac() + ")");
@@ -93,17 +82,13 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
     public Reduction getById(int id) {
         Reduction reduction = null;
         try {
-            // connexion
             Connection connexion = daoFactory.getConnection();;
             Statement statement = connexion.createStatement();
 
-            // Exécution de la requête SELECT pour récupérer le produit de l'id dans la base de données
             ResultSet resultats = statement.executeQuery("select * from reduction where id="+id);
 
-            // 	Se déplacer sur le prochain enregistrement : retourne false si la fin est atteinte
             while (resultats.next()) {
-                // récupérer les 3 champs de la table produits dans la base de données
-                // récupération des 3 champs du produit de la base de données
+
                 int idReduction = resultats.getInt(1);
                 String nomReduction = resultats.getString(2);
                 double prix_vrac = resultats.getDouble(4);
@@ -129,10 +114,8 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
     public Reduction modifier(Reduction reduction) {
         Reduction old_reduction = getById(reduction.getId());
         try {
-            // connexion
             Connection connexion = daoFactory.getConnection();
 
-            // Exécution de la requête INSERT INTO de l'objet product en paramètre
             PreparedStatement preparedStatement = connexion.prepareStatement(
                     "UPDATE reduction SET nom='"+reduction.getNom()+
                             "',prix_vrac="+reduction.getPrix_vrac()+",produit_id="+reduction.getProduit_id()+
@@ -150,7 +133,6 @@ public class AdminReductionDaoImpl implements AdminReductionDao {
     @Override
     public void supprimer(int idReduction) {
         try {
-            // connexion
             Connection connexion = daoFactory.getConnection();
 
             PreparedStatement preparedStatement = connexion.prepareStatement(
