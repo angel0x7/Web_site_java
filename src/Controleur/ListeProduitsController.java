@@ -36,45 +36,36 @@ public class ListeProduitsController {
     }
 
     public void handleAddToCart(Produit produit) {
-        try {
+        try (Connection conn = JdbcDataSource.getConnection()) {
+            // Vérification de l'utilisateur
             if (currentUser == null) {
-                JOptionPane.showMessageDialog(vue,
-                        "Veuillez vous connecter pour ajouter un article au panier.",
-                        "Utilisateur non connecté",
-                        JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(vue, "Veuillez vous connecter pour ajouter un article au panier.", "Utilisateur non connecté", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // Vérification si l'utilisateur est un administrateur
-            if (currentUser.getRole().equals("ADMIN")) {
-                JOptionPane.showMessageDialog(vue,
-                        "Les administrateurs ne peuvent pas ajouter d'articles au panier.",
-                        "Action non autorisée",
-                        JOptionPane.WARNING_MESSAGE);
+            // Récupération de l'ID du panier
+            int panierId = currentUser.getPanierId();
+            if (panierId == -1) {
+                JOptionPane.showMessageDialog(vue, "Erreur : Panier non initialisé pour l'utilisateur.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            Connection connection = JdbcDataSource.getConnection();
-            PanierDAO panierDAO = new PanierDAO(connection);
+            // Préparation de la requête SQL
+            String query = "INSERT INTO element_panier (produit_id, panier_id, quantite) VALUES (?, ?, ?)";
+            PreparedStatement statement = conn.prepareStatement(query);
+            statement.setInt(1, produit.getIdProduit());
+            statement.setInt(2, panierId);
+            statement.setInt(3, 1);
 
-            int panierId = panierDAO.getOrCreatePanier(currentUser.getId());
-            panierDAO.addOrUpdateElementPanier(panierId, produit.getIdProduit(), 1);
-            panierDAO.updatePanierTaille(panierId);
-
-            JOptionPane.showMessageDialog(vue,
-                    "Article ajouté : " + produit.getNomProduit(),
-                    "Confirmation",
-                    JOptionPane.INFORMATION_MESSAGE);
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(vue,
-                    "Erreur lors de l'ajout au panier.",
-                    "Erreur",
-                    JOptionPane.ERROR_MESSAGE);
-        } finally {
-            JdbcDataSource.closeConnection();
+            // Exécution de la requête
+            statement.executeUpdate();
+            JOptionPane.showMessageDialog(vue, "Le produit a été ajouté au panier avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(vue, "Erreur lors de l'ajout du produit au panier.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
 
     private List<Produit> fetchProducts(String keyword) {
