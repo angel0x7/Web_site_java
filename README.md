@@ -1,6 +1,6 @@
 # Projet Java ING3 2025 : Thème shopping
 
-Liens Utiles :  [**Sujet Original**](https://docs.google.com/document/d/19lHGlUQUA67WM9QGlqSUIxQmuqwDsXAAYZdGWk03RHs/edit#heading=h.gkgwng1zcbd6)
+Liens Utiles :  [**Pésentation**](Powerpoint.pdf)
 
 **Projet d'informatique en Java du second semestre (ECE ING3)**
 
